@@ -34,50 +34,45 @@ const EventPage: NextPage = () => {
         </div>
       </header>
 
-      <main className="p-4">
-        <table className="table w-full">
-          <thead>
-            <tr>
-              <td>
-                <p>Nome e Sobrenome</p>
-              </td>
-              <td>
-                <p>Idade</p>
-              </td>
-              <td>
-                <p>Presença</p>
-              </td>
-            </tr>
-          </thead>
+      <main className="p-2">
+        <div className="form-control mb-4">
+          <label className="label font-bold" htmlFor="name">
+            Nome e Sobrenome
+          </label>
+          <input
+            name="name"
+            type="text"
+            className="input input-bordered w-full"
+            autoFocus
+          />
+        </div>
 
-          <tbody>
-            <tr>
-              <td>
-                <input
-                  type="text"
-                  className="input input-bordered w-full"
-                  autoFocus
-                />
-              </td>
+        <div className="form-control mb-4">
+          <label className="label font-bold" htmlFor="age">
+            Idade
+          </label>
+          <select name="age" className="select select-bordered w-full">
+            <option selected>Adulto</option>
+            <option>De 5 a 12 anos</option>
+            <option>Menor que 5 anos</option>
+          </select>
+        </div>
 
-              <td>
-                <select className="select select-bordered w-full">
-                  <option selected>Adulto</option>
-                  <option>De 5 a 12 anos</option>
-                  <option>Menor que 5 anos</option>
-                </select>
-              </td>
+        <div className="form-control mb-4">
+          <label className="label font-bold" htmlFor="confirmation">
+            Presença
+          </label>
+          <select name="confirmation" className="select select-bordered w-full">
+            <option selected>Sim</option>
+            <option>Talvez</option>
+            <option>Não</option>
+          </select>
+        </div>
 
-              <td>
-                <select className="select select-bordered w-full">
-                  <option selected>Sim</option>
-                  <option>Talvez</option>
-                  <option>Não</option>
-                </select>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+        <div className="grid gap-2">
+          <button className="btn">Próximo Convidado &rarr;</button>
+          <button className="btn btn-primary">Finalizar</button>
+        </div>
       </main>
     </div>
   );
