@@ -1,6 +1,7 @@
 import type { NextPage } from "next";
 import Head from "next/head";
 import { trpc } from "@/utils/trpc";
+import { useSession } from "next-auth/react";
 
 type TechnologyCardProps = {
   name: string;
@@ -9,6 +10,8 @@ type TechnologyCardProps = {
 };
 
 const Home: NextPage = () => {
+  const { data } = useSession();
+
   return (
     <>
       <Head>
@@ -18,6 +21,7 @@ const Home: NextPage = () => {
       </Head>
 
       <main className="container mx-auto flex flex-col items-center justify-center h-screen p-4">
+        {data?.user && <h1>{data.user.name}</h1>}
         <h1 className="text-5xl md:text-[5rem] leading-normal font-extrabold text-gray-700">
           Create <span className="text-purple-300">T3</span> App
         </h1>

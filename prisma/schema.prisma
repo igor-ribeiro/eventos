@@ -20,11 +20,11 @@ model Account {
   provider          String
   providerAccountId String
   refresh_token     String?
-  access_token      String?
+  access_token      String? @db.Text
   expires_at        Int?
   token_type        String?
   scope             String?
-  id_token          String?
+  id_token          String? @db.Text
   session_state     String?
   user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -41,12 +41,14 @@ model Session {
 
 model User {
   id            String    @id @default(cuid())
-  name          String?
-  email         String?   @unique
+  name          String
+  email         String    @unique
   emailVerified DateTime?
   image         String?
-  accounts      Account[]
-  sessions      Session[]
+
+  accounts Account[]
+  sessions Session[]
+  event    Event[]
 }
 
 model VerificationToken {
@@ -55,4 +57,37 @@ model VerificationToken {
   expires    DateTime
 
   @@unique([identifier, token])
+}
+
+model Event {
+  id   String   @id @default(cuid())
+  name String
+  slug String
+  date DateTime
+
+  createdBy   User   @relation(fields: [createdById], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  createdById String
+
+  guests Guest[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum GuestAge {
+  ADULT
+  CHILD
+  BABY
+}
+
+model Guest {
+  id   String   @id @default(cuid())
+  name String
+  age  GuestAge @default(ADULT)
+
+  event   Event  @relation(fields: [eventId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  eventId String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
