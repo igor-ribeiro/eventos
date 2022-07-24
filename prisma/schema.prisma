@@ -60,10 +60,11 @@ model VerificationToken {
 }
 
 model Event {
-  id   String   @id @default(cuid())
-  name String
-  slug String   @unique
-  date DateTime
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  description String   @db.MediumText()
+  date        DateTime
 
   createdBy   User   @relation(fields: [createdById], references: [id], onDelete: Cascade, onUpdate: Cascade)
   createdById String
