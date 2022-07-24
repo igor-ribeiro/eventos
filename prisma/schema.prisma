@@ -62,7 +62,7 @@ model VerificationToken {
 model Event {
   id   String   @id @default(cuid())
   name String
-  slug String
+  slug String   @unique
   date DateTime
 
   createdBy   User   @relation(fields: [createdById], references: [id], onDelete: Cascade, onUpdate: Cascade)
