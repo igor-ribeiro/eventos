@@ -1,7 +1,6 @@
 import { trpc } from "@/utils/trpc";
 import { NextPage } from "next";
 import { useRouter } from "next/router";
-import imageURL from "@/assets/image.jpg";
 
 const EventPage: NextPage = () => {
   const router = useRouter();
@@ -21,7 +20,7 @@ const EventPage: NextPage = () => {
     <header
       className="hero bg-base-200 min-h-[250px] bg-center"
       style={{
-        backgroundImage: `url(${imageURL.src})`,
+        backgroundImage: data.imageUrl ? `url(${data.imageUrl})` : undefined,
       }}
     >
       <div className="hero-overlay bg-opacity-50"></div>
