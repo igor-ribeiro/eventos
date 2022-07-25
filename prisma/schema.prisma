@@ -82,10 +82,17 @@ enum GuestAge {
   BABY
 }
 
+enum GuestConfirmation {
+  YES
+  NO
+  MAYBE
+}
+
 model Guest {
-  id   String   @id @default(cuid())
-  name String
-  age  GuestAge @default(ADULT)
+  id           String            @id @default(cuid())
+  name         String
+  age          GuestAge          @default(ADULT)
+  confirmation GuestConfirmation @default(YES)
 
   event   Event  @relation(fields: [eventId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   eventId String
