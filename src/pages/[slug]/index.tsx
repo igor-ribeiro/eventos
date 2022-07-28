@@ -40,11 +40,25 @@ const EventPage: NextPage = () => {
   const shouldResetForm =
     confirmGuest.status === "success" && confirmGuest.data === "next";
 
+  const redirectToThankYou =
+    confirmGuest.status === "success" && confirmGuest.data === "finalize";
+
   useEffect(() => {
     if (shouldResetForm) {
       formRef.current!.reset();
     }
   }, [shouldResetForm]);
+
+  useEffect(() => {
+    if (redirectToThankYou) {
+      router.push({
+        pathname: "/[slug]/obrigado",
+        query: {
+          slug: router.query.slug,
+        },
+      });
+    }
+  }, [redirectToThankYou]);
 
   if (event.data == null) {
     return null;
@@ -72,7 +86,12 @@ const EventPage: NextPage = () => {
         </div>
       </header>
 
-      <form ref={formRef} className="p-2" onSubmit={onSubmit} action="">
+      <form
+        ref={formRef}
+        className="max-w-[600px] mx-auto p-2"
+        onSubmit={onSubmit}
+        action=""
+      >
         <input type="hidden" name="event_id" value={event.data.id} />
 
         <div className="form-control mb-4">

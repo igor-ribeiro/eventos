@@ -4,7 +4,7 @@ export default function Document() {
   return (
     <Html data-theme="dark">
       <Head />
-      <body className="prose">
+      <body className="prose max-w-full">
         <Main />
         <NextScript />
       </body>
