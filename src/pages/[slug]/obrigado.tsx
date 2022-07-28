@@ -25,7 +25,7 @@ const ThankYouPage: NextPage = () => {
         <meta name="description" content={event.data.description} />
       </Head>
 
-      <h1 className="text-white md:text-5xl mb-4">
+      <h1 className="text-white md:text-5xl mb-4 uppercase">
         Obrigado pela confirmação 🥳
       </h1>
       <p className="mb-4 font-bold text-1md">

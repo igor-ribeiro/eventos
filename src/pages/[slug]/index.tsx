@@ -77,10 +77,14 @@ const EventPage: NextPage = () => {
         <meta name="description" content={event.data.description} />
       </Head>
 
-      <Hero image={event.data.imageUrl}>
-        <h1 className="text-white md:text-5xl mb-4">{event.data.name}</h1>
-        <p className="mb-4 text-1md leading-5">{event.data.description}</p>
+      <Hero image={event.data.imageUrl} position="end">
+        <h1 className="text-white md:text-5xl mb-4 uppercase">
+          {event.data.name}
+        </h1>
         <p className="mb-4 font-bold text-1md leading-5">
+          {event.data.description}
+        </p>
+        <p className="mb-4 font-bold font-sm leading-5">
           Confirme sua presença abaixo
         </p>
       </Hero>
@@ -89,7 +93,7 @@ const EventPage: NextPage = () => {
         key={"form-" + formKey}
         data-key={"form-" + formKey}
         ref={formRef}
-        className="max-w-[600px] mx-auto p-2"
+        className="max-w-[600px] mx-auto p-3"
         onSubmit={onSubmit}
         action=""
       >

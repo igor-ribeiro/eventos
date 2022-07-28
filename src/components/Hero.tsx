@@ -4,10 +4,11 @@ export const Hero: FC<{
   children: ReactNode;
   image?: string | null;
   fullScreen?: boolean;
-}> = ({ image, fullScreen, children }) => {
+  position?: "start" | "center" | "end";
+}> = ({ image, fullScreen, position = "center", children }) => {
   return (
     <header
-      className={`hero bg-base-200 min-h-[200px] bg-center ${
+      className={`hero bg-base-200 min-h-[200px] bg-center place-items-${position} ${
         fullScreen ? "h-screen" : "h-[50vh]"
       }`}
       style={{
@@ -15,7 +16,7 @@ export const Hero: FC<{
       }}
     >
       <div className="hero-overlay bg-opacity-60"></div>
-      <div className="hero-content text-center text-white">
+      <div className="hero-content text-white">
         <div className="max-w-md">{children}</div>
       </div>
     </header>
