@@ -1,3 +1,4 @@
+import { Hero } from "@/components/Hero";
 import { formDataToJson } from "@/utils/formData-to-json";
 import { inferMutationInput, trpc } from "@/utils/trpc";
 import { GuestAge, GuestConfirmation } from "@prisma/client";
@@ -66,25 +67,13 @@ const EventPage: NextPage = () => {
 
   return (
     <div>
-      <header
-        className="hero bg-base-200 min-h-[200px] bg-center"
-        style={{
-          backgroundImage: event.data.imageUrl
-            ? `url(${event.data.imageUrl})`
-            : undefined,
-        }}
-      >
-        <div className="hero-overlay bg-opacity-50"></div>
-        <div className="hero-content text-center text-white">
-          <div className="max-w-md">
-            <h1 className="font-bold text-3xl md:text-5xl mb-4">
-              {event.data.name}
-            </h1>
-            <p className="mb-4">{event.data.description}</p>
-            <p className="font-bold">Confirme sua presença abaixo</p>
-          </div>
-        </div>
-      </header>
+      <Hero image={event.data.imageUrl}>
+        <h1 className="text-white md:text-5xl mb-4">{event.data.name}</h1>
+        <p className="mb-4 text-1md leading-5">{event.data.description}</p>
+        <p className="mb-4 font-bold text-1md leading-5">
+          Confirme sua presença abaixo
+        </p>
+      </Hero>
 
       <form
         ref={formRef}
