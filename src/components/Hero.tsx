@@ -3,8 +3,8 @@ import { FC, ReactNode } from "react";
 type Position = "start" | "center" | "end";
 
 const POSITION_CLASSES: Record<Position, string> = {
-  start: "place-items-start",
-  end: "place-items-end",
+  start: "items-start",
+  end: "items-end",
   center: "place-items-center",
 };
 
