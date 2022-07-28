@@ -3,13 +3,15 @@ import { formDataToJson } from "@/utils/formData-to-json";
 import { inferMutationInput, trpc } from "@/utils/trpc";
 import { GuestAge, GuestConfirmation } from "@prisma/client";
 import { NextPage } from "next";
+import Head from "next/head";
 import { useRouter } from "next/router";
-import { FormEvent, useEffect, useRef } from "react";
+import { FormEvent, useEffect, useRef, useState } from "react";
 
 const EventPage: NextPage = () => {
   const router = useRouter();
 
   const formRef = useRef<HTMLFormElement>(null);
+  const [formKey, setFormKey] = useState(0);
 
   const event = trpc.useQuery([
     "event.getBySlug",
@@ -44,9 +46,12 @@ const EventPage: NextPage = () => {
   const redirectToThankYou =
     confirmGuest.status === "success" && confirmGuest.data === "finalize";
 
+  console.log({ shouldResetForm, formKey });
+
   useEffect(() => {
     if (shouldResetForm) {
       formRef.current!.reset();
+      setFormKey((key) => key + 1);
     }
   }, [shouldResetForm]);
 
@@ -67,6 +72,11 @@ const EventPage: NextPage = () => {
 
   return (
     <div>
+      <Head>
+        <title>{event.data.name}</title>
+        <meta name="description" content={event.data.description} />
+      </Head>
+
       <Hero image={event.data.imageUrl}>
         <h1 className="text-white md:text-5xl mb-4">{event.data.name}</h1>
         <p className="mb-4 text-1md leading-5">{event.data.description}</p>
@@ -76,6 +86,8 @@ const EventPage: NextPage = () => {
       </Hero>
 
       <form
+        key={"form-" + formKey}
+        data-key={"form-" + formKey}
         ref={formRef}
         className="max-w-[600px] mx-auto p-2"
         onSubmit={onSubmit}
