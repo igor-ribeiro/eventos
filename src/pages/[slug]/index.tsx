@@ -75,10 +75,10 @@ const EventPage: NextPage = () => {
       <Head>
         <title>{event.data.name}</title>
         <meta name="description" content={event.data.description} />
-        <meta name="og:title" content={event.data.name} />
-        <meta name="og:description" content={event.data.description} />
+        <meta property="og:title" content={event.data.name} />
+        <meta property="og:description" content={event.data.description} />
         {event.data.imageUrl && (
-          <meta name="og:image" content={event.data.imageUrl} />
+          <meta property="og:image" content={event.data.imageUrl} />
         )}
       </Head>
 
