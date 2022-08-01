@@ -77,6 +77,9 @@ const EventPage: NextPage = () => {
         <meta name="description" content={event.data.description} />
         <meta name="og:title" content={event.data.name} />
         <meta name="og:description" content={event.data.description} />
+        {event.data.imageUrl && (
+          <meta name="og:image" content={event.data.imageUrl} />
+        )}
       </Head>
 
       <Hero image={event.data.imageUrl} position="end">
