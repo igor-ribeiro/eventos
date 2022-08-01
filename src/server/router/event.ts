@@ -65,6 +65,7 @@ export const eventRouter = createRouter()
           slug: input.slug,
         },
         select: {
+          id: true,
           name: true,
           guests: {
             orderBy: {

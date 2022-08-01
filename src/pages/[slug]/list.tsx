@@ -4,11 +4,19 @@ import { GuestAge, GuestConfirmation } from "@prisma/client";
 import { NextPage } from "next";
 import Head from "next/head";
 import { useRouter } from "next/router";
+import { ChangeEvent, useReducer } from "react";
+import removeAccents from "remove-accents";
 
 type Total = Record<
   GuestConfirmation,
   Record<GuestAge, number> & { total: number }
 >;
+
+type Filter = {
+  name: string;
+  age: string;
+  confirmation: string;
+};
 
 const ListPage: NextPage = () => {
   const router = useRouter();
@@ -19,6 +27,26 @@ const ListPage: NextPage = () => {
       slug: router.query.slug as string,
     },
   ]);
+
+  const [filter, update] = useReducer(
+    (state: Filter, action: Partial<Filter>) => {
+      return {
+        ...state,
+        ...action,
+      };
+    },
+    {
+      name: "",
+      age: "",
+      confirmation: "",
+    }
+  );
+
+  function onChange(e: ChangeEvent<HTMLInputElement>) {
+    update({
+      [e.target.name]: e.target.value,
+    });
+  }
 
   if (event.data == null) {
     return null;
@@ -51,6 +79,31 @@ const ListPage: NextPage = () => {
   );
 
   const totalConfirmed = total.YES.total + total.MAYBE.total;
+
+  const guests = event.data.guests.filter((guest) => {
+    let show = true;
+
+    const hasName = new RegExp(removeAccents(filter.name), "i").test(
+      removeAccents(guest.name)
+    );
+
+    const hasAge = guest.age === filter.age;
+    const hasConfirmation = guest.confirmation === filter.confirmation;
+
+    if (filter.name && !hasName) {
+      return false;
+    }
+
+    if (filter.age && !hasAge) {
+      return false;
+    }
+
+    if (filter.confirmation && !hasConfirmation) {
+      return false;
+    }
+
+    return true;
+  });
 
   return (
     <div className="p-4">
@@ -99,26 +152,71 @@ const ListPage: NextPage = () => {
       </div>
 
       <div className="border border-base-300 rounded-md mt-4 overflow-x-auto">
-        <table className="table w-full table-compact m-0">
-          <thead>
-            <tr>
-              <th></th>
-              <th>Nome</th>
-              <th>Idade</th>
-              <th>Confirmado</th>
-            </tr>
-          </thead>
-          <tbody>
-            {event.data.guests.map((guest, i) => (
-              <tr key={guest.id} className={i % 2 === 0 ? "" : "active"}>
-                <th>{i + 1}</th>
-                <td>{guest.name}</td>
-                <td>{renderAge(guest.age)}</td>
-                <td>{renderConfirmation(guest.confirmation)}</td>
+        <form className="mx-auto" onChange={onChange} action="">
+          <input type="hidden" name="event_id" value={event.data.id} />
+          <table className="table w-full table-compact m-0">
+            <thead>
+              <tr>
+                <th></th>
+                <th>
+                  <div className="form-control">
+                    <label className="label" htmlFor="name">
+                      Nome
+                    </label>
+                    <input
+                      name="name"
+                      type="text"
+                      className="input input-bordered input-sm w-full"
+                      autoFocus
+                    />
+                  </div>
+                </th>
+                <th>
+                  <div className="form-control">
+                    <label className="label" htmlFor="age">
+                      Idade
+                    </label>
+                    <select
+                      name="age"
+                      className="select select-bordered w-full select-sm"
+                    >
+                      <option value="">Todos</option>
+                      <option value={GuestAge.ADULT}>Adulto</option>
+                      <option value={GuestAge.CHILD}>De 5 a 12 anos</option>
+                      <option value={GuestAge.BABY}>Menor que 5 anos</option>
+                    </select>
+                  </div>
+                </th>
+                <th>
+                  <div className="form-control">
+                    <label className="label" htmlFor="confirmation">
+                      Confirmado
+                    </label>
+                    <select
+                      name="confirmation"
+                      className="select select-bordered w-full select-sm"
+                    >
+                      <option value="">Todos</option>
+                      <option value={GuestConfirmation.YES}>Sim</option>
+                      <option value={GuestConfirmation.MAYBE}>Talvez</option>
+                      <option value={GuestConfirmation.NO}>Não</option>
+                    </select>
+                  </div>
+                </th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {guests.map((guest, i) => (
+                <tr key={guest.id} className={i % 2 === 0 ? "" : "active"}>
+                  <th>{i + 1}</th>
+                  <td>{guest.name}</td>
+                  <td>{renderAge(guest.age)}</td>
+                  <td>{renderConfirmation(guest.confirmation)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </form>
       </div>
     </div>
   );
