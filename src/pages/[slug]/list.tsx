@@ -64,29 +64,35 @@ const ListPage: NextPage = () => {
         <table className="table w-full table-compact m-0">
           <thead>
             <tr>
-              <th></th>
-              <th>Total</th>
-              <th colSpan={2}>Idade</th>
+              <th colSpan={2} className="text-center">
+                Total
+              </th>
+              <th colSpan={3} className="text-center">
+                Idade
+              </th>
+            </tr>
+            <tr>
+              <th className="font-bold">Presença</th>
+              <th className="font-bold">{totalConfirmed}</th>
+              <th className="font-bold">Adulto</th>
+              <th className="font-bold">Criança</th>
+              <th className="font-bold">Bebê</th>
             </tr>
           </thead>
           <tbody>
-            <tr>
-              <td className="font-bold">Presença</td>
-              <td className="font-bold">{totalConfirmed}</td>
-              <td className="font-bold">Adulto</td>
-              <td className="font-bold">Criança</td>
-            </tr>
             <tr>
               <td>Sim</td>
               <td>{total.YES.total}</td>
               <td>{total.YES.ADULT}</td>
               <td>{total.YES.CHILD}</td>
+              <td>{total.YES.BABY}</td>
             </tr>
             <tr>
               <td>Talvez</td>
               <td>{total.MAYBE.total}</td>
               <td>{total.MAYBE.ADULT}</td>
               <td>{total.MAYBE.CHILD}</td>
+              <td>{total.MAYBE.BABY}</td>
             </tr>
           </tbody>
         </table>
