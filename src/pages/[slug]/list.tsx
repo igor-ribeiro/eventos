@@ -18,6 +18,13 @@ type Filter = {
   confirmation: string;
 };
 
+function filterReducer(state: Filter, action: Partial<Filter>): Filter {
+  return {
+    ...state,
+    ...action,
+  };
+}
+
 const ListPage: NextPage = () => {
   const router = useRouter();
 
@@ -28,21 +35,13 @@ const ListPage: NextPage = () => {
     },
   ]);
 
-  const [filter, update] = useReducer(
-    (state: Filter, action: Partial<Filter>) => {
-      return {
-        ...state,
-        ...action,
-      };
-    },
-    {
-      name: "",
-      age: "",
-      confirmation: "",
-    }
-  );
+  const [filter, update] = useReducer(filterReducer, {
+    name: "",
+    age: "",
+    confirmation: "",
+  });
 
-  function onChange(e: ChangeEvent<HTMLInputElement>) {
+  function onChange(e: ChangeEvent<HTMLFormElement>) {
     update({
       [e.target.name]: e.target.value,
     });
