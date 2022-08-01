@@ -5,7 +5,7 @@ import { GuestAge, GuestConfirmation } from "@prisma/client";
 import { NextPage } from "next";
 import Head from "next/head";
 import { useRouter } from "next/router";
-import { ChangeEvent, useReducer } from "react";
+import { ChangeEvent, useReducer, useRef } from "react";
 import removeAccents from "remove-accents";
 
 type Total = Record<
@@ -19,7 +19,20 @@ type Filter = {
   confirmation: string;
 };
 
-function filterReducer(state: Filter, action: Partial<Filter>): Filter {
+const INITIAL_FILTER = {
+  name: "",
+  age: "",
+  confirmation: "",
+};
+
+function filterReducer(
+  state: Filter,
+  action: Partial<Filter> | "RESET"
+): Filter {
+  if (action === "RESET") {
+    return INITIAL_FILTER;
+  }
+
   return {
     ...state,
     ...action,
@@ -27,6 +40,8 @@ function filterReducer(state: Filter, action: Partial<Filter>): Filter {
 }
 
 const ListPage: NextPage = () => {
+  const formRef = useRef<HTMLFormElement>(null);
+
   const router = useRouter();
 
   const event = trpc.useQuery([
@@ -38,11 +53,7 @@ const ListPage: NextPage = () => {
 
   const removeGuest = trpc.useMutation(["event.removeGuest"]);
 
-  const [filter, update] = useReducer(filterReducer, {
-    name: "",
-    age: "",
-    confirmation: "",
-  });
+  const [filter, update] = useReducer(filterReducer, INITIAL_FILTER);
 
   if (event.data == null) {
     return null;
@@ -100,6 +111,12 @@ const ListPage: NextPage = () => {
       ),
       `convidados-${router.query.slug}`
     );
+  }
+
+  function onClearFilter() {
+    formRef.current!.reset();
+    (formRef.current!.name as any as HTMLInputElement).focus();
+    update("RESET");
   }
 
   const total = event.data.guests.reduce(
@@ -176,13 +193,24 @@ const ListPage: NextPage = () => {
         </table>
       </div>
 
-      <div className="border border-base-300 rounded-md overflow-x-auto">
-        <form className="mx-auto" onChange={onChange} action="">
+      <div className="border border-base-300 rounded-md overflow-x-auto mt-6">
+        <form className="mx-auto" onChange={onChange} action="" ref={formRef}>
           <input type="hidden" name="event_id" value={event.data.id} />
           <table className="table w-full table-compact m-0">
             <thead>
               <tr>
-                <th></th>
+                <th className="w-[64px]">
+                  <br />
+                  {guests.length !== event.data.guests.length && (
+                    <button
+                      className="btn btn-sm "
+                      type="button"
+                      onClick={onClearFilter}
+                    >
+                      <ClearIcon />
+                    </button>
+                  )}
+                </th>
                 <th>
                   <div className="form-control">
                     <label htmlFor="name">Nome</label>
@@ -222,7 +250,7 @@ const ListPage: NextPage = () => {
                     </select>
                   </div>
                 </th>
-                <th className="align-top">
+                <th className="align-top w-[30px]">
                   <br />
                   <button
                     className="btn btn-sm"
@@ -241,7 +269,7 @@ const ListPage: NextPage = () => {
                   <td>{guest.name}</td>
                   <td>{renderAge(guest.age)}</td>
                   <td>{renderConfirmation(guest.confirmation)}</td>
-                  <td className="align-center">
+                  <td className="text-center">
                     <button
                       type="button"
                       onClick={() => onRemoveGuest(guest.id)}
@@ -313,6 +341,25 @@ function DownloadIcon() {
         strokeLinecap="round"
         strokeLinejoin="round"
         d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+      />
+    </svg>
+  );
+}
+
+function ClearIcon() {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      className="h-6 w-6"
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+      strokeWidth={2}
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
       />
     </svg>
   );
