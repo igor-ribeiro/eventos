@@ -77,4 +77,18 @@ export const eventRouter = createRouter()
 
       return event;
     },
+  })
+  .mutation("removeGuest", {
+    input: z.object({
+      id: z.string().cuid(),
+    }),
+    async resolve({ input, ctx }) {
+      await ctx.prisma.guest.delete({
+        where: {
+          id: input.id,
+        },
+      });
+
+      return true;
+    },
   });

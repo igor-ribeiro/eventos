@@ -35,6 +35,8 @@ const ListPage: NextPage = () => {
     },
   ]);
 
+  const removeGuest = trpc.useMutation(["event.removeGuest"]);
+
   const [filter, update] = useReducer(filterReducer, {
     name: "",
     age: "",
@@ -45,6 +47,13 @@ const ListPage: NextPage = () => {
     update({
       [e.target.name]: e.target.value,
     });
+  }
+
+  function onRemoveGuest(id: string) {
+    removeGuest
+      .mutateAsync({ id })
+      .then(() => alert("Convidado removido"))
+      .catch(() => alert("Erro ao remover convidado. Tente novamente"));
   }
 
   if (event.data == null) {
@@ -159,9 +168,7 @@ const ListPage: NextPage = () => {
                 <th></th>
                 <th>
                   <div className="form-control">
-                    <label className="label" htmlFor="name">
-                      Nome
-                    </label>
+                    <label htmlFor="name">Nome</label>
                     <input
                       name="name"
                       type="text"
@@ -172,9 +179,7 @@ const ListPage: NextPage = () => {
                 </th>
                 <th>
                   <div className="form-control">
-                    <label className="label" htmlFor="age">
-                      Idade
-                    </label>
+                    <label htmlFor="age">Idade</label>
                     <select
                       name="age"
                       className="select select-bordered w-full select-sm"
@@ -188,9 +193,7 @@ const ListPage: NextPage = () => {
                 </th>
                 <th>
                   <div className="form-control">
-                    <label className="label" htmlFor="confirmation">
-                      Confirmado
-                    </label>
+                    <label htmlFor="confirmation">Confirmado</label>
                     <select
                       name="confirmation"
                       className="select select-bordered w-full select-sm"
@@ -202,6 +205,7 @@ const ListPage: NextPage = () => {
                     </select>
                   </div>
                 </th>
+                <th></th>
               </tr>
             </thead>
             <tbody>
@@ -211,6 +215,15 @@ const ListPage: NextPage = () => {
                   <td>{guest.name}</td>
                   <td>{renderAge(guest.age)}</td>
                   <td>{renderConfirmation(guest.confirmation)}</td>
+                  <td className="align-center">
+                    <button
+                      type="button"
+                      onClick={() => onRemoveGuest(guest.id)}
+                      disabled={removeGuest.status === "loading"}
+                    >
+                      <RemoveIcon />
+                    </button>
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -239,6 +252,25 @@ const CONFIRMATION_TEXT: Record<GuestConfirmation, string> = {
 
 function renderConfirmation(confirmation: GuestConfirmation): string {
   return CONFIRMATION_TEXT[confirmation];
+}
+
+function RemoveIcon() {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      className="h-6 w-6"
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+      strokeWidth={2}
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+      />
+    </svg>
+  );
 }
 
 export default ListPage;
