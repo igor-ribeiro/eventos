@@ -6,6 +6,7 @@ import {
   Prisma,
   User,
 } from "@prisma/client";
+import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import { createProtectedRouter, createRouter } from "./context";
 
@@ -105,10 +106,10 @@ export const eventPrivateRouter = createProtectedRouter()
         imageUrl,
         date,
         users,
-        createdBy,
+        createdById,
         guests,
       }: Event & {
-        createdBy?: User;
+        createdById?: string;
         users?: User[];
         guests: Guest[];
       } = JSON.parse(input.data);
@@ -129,12 +130,14 @@ export const eventPrivateRouter = createProtectedRouter()
             }
           : {}),
         // Legacy schema
-        ...(createdBy
+        ...(createdById
           ? {
               users: {
-                connect: {
-                  id: ctx.session.user.id,
-                },
+                connect: [
+                  {
+                    id: ctx.session.user.id,
+                  },
+                ],
               },
             }
           : {}),

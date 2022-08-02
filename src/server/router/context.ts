@@ -30,7 +30,6 @@ export const createRouter = () => trpc.router<Context>();
 export const createProtectedRouter = () =>
   createRouter().middleware(async ({ ctx, next }) => {
     if (!ctx.session?.user) {
-      console.log("\n\nERROR\n\n", ctx);
       throw new TRPCError({
         message: "",
         code: "UNAUTHORIZED",

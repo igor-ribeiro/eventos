@@ -1,18 +1,14 @@
-import superjson from "superjson";
 import { downloadFile, generateCsv } from "@/utils/export";
 import { trpc } from "@/utils/trpc";
 import { GuestAge, GuestConfirmation } from "@prisma/client";
-import { createSSGHelpers } from "@trpc/react/ssg";
 import { GetServerSideProps, NextPage } from "next";
-import { unstable_getServerSession } from "next-auth";
 import Head from "next/head";
 import { useRouter } from "next/router";
 import { ChangeEvent, useReducer, useRef } from "react";
 import removeAccents from "remove-accents";
-import { authOptions } from "../api/auth/[...nextauth]";
-import { appRouter } from "@/server/router";
-import { prisma } from "@/server/db/client";
 import { ClearIcon, DownloadIcon, RemoveIcon } from "@/components/Icons";
+import { getSSP } from "@/server/get-ssp";
+import { Protected } from "..";
 
 type Total = Record<
   GuestConfirmation,
@@ -45,50 +41,28 @@ function filterReducer(
   };
 }
 
-export const getServerSideProps: GetServerSideProps = async (ctx) => {
-  const session = await unstable_getServerSession(
-    ctx.req,
-    ctx.res,
-    authOptions
-  );
-
-  const ssr = createSSGHelpers({
-    router: appRouter,
-    transformer: superjson,
-    ctx: {
-      req: undefined,
-      res: undefined,
-      session: session,
-      prisma: prisma,
-    },
-  });
-
-  try {
-    await ssr.fetchQuery("event.user.getListBySlug", {
+export const getServerSideProps: GetServerSideProps = (ctx) => {
+  return getSSP(ctx, (ssr) =>
+    ssr.fetchQuery("event.user.getListBySlug", {
       slug: ctx.query.slug as string,
-    });
-  } catch (e: any) {
-    if (e.code === "UNAUTHORIZED") {
-      return {
-        redirect: {
-          permanent: false,
-          destination: "/api/auth/signin",
-        },
-      };
-    }
-  }
+    })
+  );
+};
 
-  return {
-    props: {
-      trpcState: ssr.dehydrate(),
-    },
-  };
+const GuestListPage: NextPage = () => {
+  return (
+    <Protected>
+      <ListPage />
+    </Protected>
+  );
 };
 
 const ListPage: NextPage = () => {
   const formRef = useRef<HTMLFormElement>(null);
 
   const router = useRouter();
+
+  trpc.useQuery(["event.user.getAllByUser"]);
 
   const event = trpc.useQuery([
     "event.user.getListBySlug",
@@ -200,7 +174,7 @@ const ListPage: NextPage = () => {
   return (
     <div className="p-4">
       <Head>
-        <title>Lista - {event.data.name}</title>
+        <title>Convidados - {event.data.name}</title>
       </Head>
 
       <div className="flex justify-between">
@@ -363,4 +337,4 @@ function renderConfirmation(confirmation: GuestConfirmation): string {
   return CONFIRMATION_TEXT[confirmation];
 }
 
-export default ListPage;
+export default GuestListPage;

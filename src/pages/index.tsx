@@ -1,4 +1,3 @@
-import superjson from "superjson";
 import { trpc } from "@/utils/trpc";
 import type { GetServerSideProps, NextPage } from "next";
 import Head from "next/head";
@@ -10,61 +9,18 @@ import {
   useEffect,
   useRef,
 } from "react";
-import { createSSGHelpers } from "@trpc/react/ssg";
-import { appRouter } from "@/server/router";
-import { prisma } from "@/server/db/client";
-import { Session, unstable_getServerSession } from "next-auth";
-import { authOptions } from "@/pages/api/auth/[...nextauth]";
+import { Session } from "next-auth";
 import Link from "next/link";
 import { UploadIcon } from "@/components/Icons";
+import { getSSP } from "@/server/get-ssp";
 
-export const getServerSideProps: GetServerSideProps = async (ctx) => {
-  const session = await unstable_getServerSession(
-    ctx.req,
-    ctx.res,
-    authOptions
-  );
-
-  const ssr = createSSGHelpers({
-    router: appRouter,
-    transformer: superjson,
-    ctx: {
-      req: undefined,
-      res: undefined,
-      session: session,
-      prisma: prisma,
-    },
-  });
-
-  try {
-    await Promise.all([
-      ssr.fetchQuery("event.user.getAllByUser"),
-      ssr.fetchQuery("auth.getSession"),
-    ]);
-  } catch (e: any) {
-    if (e.code === "UNAUTHORIZED") {
-      return {
-        redirect: {
-          permanent: false,
-          destination: "/api/auth/signin",
-        },
-      };
-    }
-  }
-
-  return {
-    props: {
-      trpcState: ssr.dehydrate(),
-    },
-  };
+export const getServerSideProps: GetServerSideProps = (ctx) => {
+  return getSSP(ctx, (ssr) => ssr.fetchQuery("event.user.getAllByUser"));
 };
 
 const Home: NextPage = () => {
   return (
     <Protected>
-      <Head>
-        <title>Eventos</title>
-      </Head>
       <EventsPage />
     </Protected>
   );
@@ -108,6 +64,10 @@ const EventsPage = () => {
 
   return (
     <div className="p-4">
+      <Head>
+        <title>Meus Eventos</title>
+      </Head>
+
       <div className="flex justify-between">
         <h1 className="mb-2">Meus Eventos</h1>
 
@@ -146,7 +106,7 @@ const EventsPage = () => {
 
 const ProtectedContext = createContext<Session | null>(null);
 
-const Protected = ({ children }: { children: ReactNode }) => {
+export const Protected = ({ children }: { children: ReactNode }) => {
   const session = trpc.useQuery(["auth.getSession"]);
   const router = useRouter();
 

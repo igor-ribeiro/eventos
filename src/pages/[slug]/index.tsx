@@ -62,7 +62,7 @@ const EventPage: NextPage = () => {
         },
       });
     }
-  }, [redirectToThankYou]);
+  }, [redirectToThankYou, router]);
 
   if (event.data == null) {
     return null;
