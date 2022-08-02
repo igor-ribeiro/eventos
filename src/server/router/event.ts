@@ -1,4 +1,10 @@
-import { GuestAge, GuestConfirmation } from "@prisma/client";
+import {
+  Event,
+  Guest,
+  GuestAge,
+  GuestConfirmation,
+  Prisma,
+} from "@prisma/client";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import { createProtectedRouter, createRouter } from "./context";
@@ -85,6 +91,40 @@ export const eventRouter = createRouter()
           });
 
           return true;
+        },
+      })
+      .mutation("importEvent", {
+        input: z.object({
+          data: z.string(),
+        }),
+        async resolve({ input, ctx }) {
+          const {
+            id,
+            createdAt,
+            updatedAt,
+            createdById,
+            ...event
+          }: Event & {
+            guests: Guest[];
+          } = JSON.parse(input.data);
+
+          const data: Prisma.EventCreateInput = {
+            ...event,
+            createdBy: {
+              connect: {
+                id: ctx.session.user.id,
+              },
+            },
+            guests: {
+              create: event.guests.map(
+                ({ id, createdAt, updatedAt, eventId, ...guest }) => guest
+              ),
+            },
+          };
+
+          return await ctx.prisma.event.create({
+            data,
+          });
         },
       })
   );
