@@ -9,6 +9,7 @@ generator client {
 datasource db {
   provider             = "mysql"
   url                  = env("DATABASE_URL")
+  shadowDatabaseUrl    = env("DATABASE_SHADOW_URL")
   referentialIntegrity = "prisma"
 }
 
