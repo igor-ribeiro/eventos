@@ -14,13 +14,13 @@ const EventPage: NextPage = () => {
   const [formKey, setFormKey] = useState(0);
 
   const event = trpc.useQuery([
-    "event.getBySlug",
+    "event.public.getBySlug",
     {
       slug: router.query.slug as string,
     },
   ]);
 
-  const confirmGuest = trpc.useMutation(["event.confirmGuest"]);
+  const confirmGuest = trpc.useMutation(["event.public.confirmGuest"]);
 
   function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.persist();
@@ -29,9 +29,9 @@ const EventPage: NextPage = () => {
     // @ts-ignore
     const button = e.nativeEvent.submitter as HTMLButtonElement | undefined;
 
-    const data = formDataToJson<inferMutationInput<"event.confirmGuest">>(
-      new FormData(e.target as HTMLFormElement)
-    );
+    const data = formDataToJson<
+      inferMutationInput<"event.public.confirmGuest">
+    >(new FormData(e.target as HTMLFormElement));
 
     if (button) {
       data[button.name as "action"] = button.value as typeof data.action;
@@ -45,8 +45,6 @@ const EventPage: NextPage = () => {
 
   const redirectToThankYou =
     confirmGuest.status === "success" && confirmGuest.data === "finalize";
-
-  console.log({ shouldResetForm, formKey });
 
   useEffect(() => {
     if (shouldResetForm) {
@@ -102,7 +100,7 @@ const EventPage: NextPage = () => {
         onSubmit={onSubmit}
         action=""
       >
-        <input type="hidden" name="event_id" value={event.data.id} />
+        <input type="hidden" name="event.public.id" value={event.data.id} />
 
         <div className="form-control mb-4">
           <label className="label font-bold" htmlFor="name">

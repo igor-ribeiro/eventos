@@ -3,12 +3,13 @@ import { createRouter } from "./context";
 import superjson from "superjson";
 
 import { authRouter } from "./auth";
-import { eventRouter } from "./event";
+import { eventPrivateRouter, eventPublicRouter } from "./event";
 
 export const appRouter = createRouter()
   .transformer(superjson)
   .merge("auth.", authRouter)
-  .merge("event.", eventRouter);
+  .merge("event.public.", eventPublicRouter)
+  .merge("event.user.", eventPrivateRouter);
 
 // export type definition of API
 export type AppRouter = typeof appRouter;

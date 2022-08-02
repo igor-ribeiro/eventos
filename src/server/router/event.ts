@@ -4,12 +4,12 @@ import {
   GuestAge,
   GuestConfirmation,
   Prisma,
+  User,
 } from "@prisma/client";
-import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import { createProtectedRouter, createRouter } from "./context";
 
-export const eventRouter = createRouter()
+export const eventPublicRouter = createRouter()
   .query("getBySlug", {
     input: z.object({
       slug: z.string(),
@@ -44,87 +44,109 @@ export const eventRouter = createRouter()
 
       return input.action;
     },
-  })
+  });
 
-  .merge(
-    "user.",
-    createProtectedRouter()
-      .query("getAllByUser", {
-        async resolve({ ctx }) {
-          return ctx.prisma.event.findMany({
-            where: {
-              createdById: ctx.session!.user.id,
+export const eventPrivateRouter = createProtectedRouter()
+  .query("getAllByUser", {
+    async resolve({ ctx }) {
+      return ctx.prisma.event.findMany({
+        where: {
+          users: {
+            some: {
+              id: ctx.session.user.id,
             },
-          });
+          },
         },
-      })
-      .query("getListBySlug", {
-        input: z.object({
-          slug: z.string(),
-        }),
-        async resolve({ input, ctx }) {
-          const event = await ctx.prisma.event.findUnique({
-            where: {
-              slug: input.slug,
+      });
+    },
+  })
+  .query("getListBySlug", {
+    input: z.object({
+      slug: z.string(),
+    }),
+    async resolve({ input, ctx }) {
+      const event = await ctx.prisma.event.findUnique({
+        where: {
+          slug: input.slug,
+        },
+        include: {
+          guests: {
+            orderBy: {
+              createdAt: "desc",
             },
-            include: {
-              guests: {
-                orderBy: {
-                  createdAt: "desc",
+          },
+        },
+      });
+
+      return event;
+    },
+  })
+  .mutation("removeGuest", {
+    input: z.object({
+      id: z.string().cuid(),
+    }),
+    async resolve({ input, ctx }) {
+      await ctx.prisma.guest.delete({
+        where: {
+          id: input.id,
+        },
+      });
+    },
+  })
+  .mutation("importEvent", {
+    input: z.object({
+      data: z.string(),
+    }),
+    async resolve({ input, ctx }) {
+      const {
+        slug,
+        name,
+        description,
+        imageUrl,
+        date,
+        users,
+        createdBy,
+        guests,
+      }: Event & {
+        createdBy?: User;
+        users?: User[];
+        guests: Guest[];
+      } = JSON.parse(input.data);
+
+      const data: Prisma.EventCreateInput = {
+        slug,
+        name,
+        description,
+        imageUrl,
+        date,
+        ...(users
+          ? {
+              users: {
+                connect: users.map((user) => ({
+                  email: user.email,
+                })),
+              },
+            }
+          : {}),
+        // Legacy schema
+        ...(createdBy
+          ? {
+              users: {
+                connect: {
+                  id: ctx.session.user.id,
                 },
               },
-            },
-          });
-
-          return event;
+            }
+          : {}),
+        guests: {
+          create: guests.map(
+            ({ id, createdAt, updatedAt, eventId, ...guest }) => guest
+          ),
         },
-      })
-      .mutation("removeGuest", {
-        input: z.object({
-          id: z.string().cuid(),
-        }),
-        async resolve({ input, ctx }) {
-          await ctx.prisma.guest.delete({
-            where: {
-              id: input.id,
-            },
-          });
+      };
 
-          return true;
-        },
-      })
-      .mutation("importEvent", {
-        input: z.object({
-          data: z.string(),
-        }),
-        async resolve({ input, ctx }) {
-          const {
-            id,
-            createdAt,
-            updatedAt,
-            createdById,
-            ...event
-          }: Event & {
-            guests: Guest[];
-          } = JSON.parse(input.data);
-
-          const data: Prisma.EventCreateInput = {
-            ...event,
-            createdBy: {
-              connect: {
-                id: ctx.session.user.id,
-              },
-            },
-            guests: {
-              create: event.guests.map(
-                ({ id, createdAt, updatedAt, eventId, ...guest }) => guest
-              ),
-            },
-          };
-
-          return await ctx.prisma.event.create({
-            data,
-          });
-        },
-      })
-  );
+      return ctx.prisma.event.create({
+        data,
+      });
+    },
+  });
