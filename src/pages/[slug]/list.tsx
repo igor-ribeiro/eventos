@@ -1,12 +1,17 @@
-import { Hero } from "@/components/Hero";
-import { downloadCsv, generateCsv } from "@/utils/csv";
+import superjson from "superjson";
+import { downloadFile, generateCsv } from "@/utils/export";
 import { trpc } from "@/utils/trpc";
 import { GuestAge, GuestConfirmation } from "@prisma/client";
-import { NextPage } from "next";
+import { createSSGHelpers } from "@trpc/react/ssg";
+import { GetServerSideProps, NextPage } from "next";
+import { unstable_getServerSession } from "next-auth";
 import Head from "next/head";
 import { useRouter } from "next/router";
 import { ChangeEvent, useReducer, useRef } from "react";
 import removeAccents from "remove-accents";
+import { authOptions } from "../api/auth/[...nextauth]";
+import { appRouter } from "@/server/router";
+import { prisma } from "@/server/db/client";
 
 type Total = Record<
   GuestConfirmation,
@@ -39,19 +44,57 @@ function filterReducer(
   };
 }
 
+export const getServerSideProps: GetServerSideProps = async (ctx) => {
+  const session = await unstable_getServerSession(
+    ctx.req,
+    ctx.res,
+    authOptions
+  );
+
+  const ssr = createSSGHelpers({
+    router: appRouter,
+    transformer: superjson,
+    ctx: {
+      req: undefined,
+      res: undefined,
+      session: session,
+      prisma: prisma,
+    },
+  });
+
+  try {
+    await ssr.fetchQuery("event.user.getListBySlug", {
+      slug: ctx.query.slug as string,
+    });
+  } catch (e) {
+    return {
+      redirect: {
+        permanent: false,
+        destination: "/api/auth/signin",
+      },
+    };
+  }
+
+  return {
+    props: {
+      trpcState: ssr.dehydrate(),
+    },
+  };
+};
+
 const ListPage: NextPage = () => {
   const formRef = useRef<HTMLFormElement>(null);
 
   const router = useRouter();
 
   const event = trpc.useQuery([
-    "event.getListBySlug",
+    "event.user.getListBySlug",
     {
       slug: router.query.slug as string,
     },
   ]);
 
-  const removeGuest = trpc.useMutation(["event.removeGuest"]);
+  const removeGuest = trpc.useMutation(["event.user.removeGuest"]);
 
   const [filter, update] = useReducer(filterReducer, INITIAL_FILTER);
 
@@ -95,8 +138,12 @@ const ListPage: NextPage = () => {
       .catch(() => alert("Erro ao remover convidado. Tente novamente"));
   }
 
-  function onExport() {
-    downloadCsv(
+  function onExportEvent() {
+    downloadFile(JSON.stringify(event.data), `event-${router.query.slug}.json`);
+  }
+
+  function onExportGuestList() {
+    downloadFile(
       generateCsv(
         [
           { name: "name", label: "Nome" },
@@ -109,7 +156,7 @@ const ListPage: NextPage = () => {
         ],
         guests
       ),
-      `convidados-${router.query.slug}`
+      `convidados-${router.query.slug}.csv`
     );
   }
 
@@ -153,7 +200,12 @@ const ListPage: NextPage = () => {
         <title>Lista - {event.data.name}</title>
       </Head>
 
-      <h1 className="mb-0 uppercase">{event.data.name}</h1>
+      <div className="flex justify-between">
+        <h1 className="mb-0 uppercase">{event.data.name}</h1>
+        <button className="btn" title="Exportar Evento" onClick={onExportEvent}>
+          <DownloadIcon />
+        </button>
+      </div>
 
       <div className="border border-base-300 rounded-md mt-4">
         <table className="table w-full table-compact m-0">
@@ -255,7 +307,7 @@ const ListPage: NextPage = () => {
                   <button
                     className="btn btn-sm"
                     type="button"
-                    onClick={onExport}
+                    onClick={onExportGuestList}
                   >
                     <DownloadIcon />
                   </button>
@@ -360,6 +412,25 @@ function ClearIcon() {
         strokeLinecap="round"
         strokeLinejoin="round"
         d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
+      />
+    </svg>
+  );
+}
+
+function ExportIcon() {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      className="h-6 w-6"
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+      strokeWidth={2}
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10"
       />
     </svg>
   );

@@ -29,10 +29,19 @@ export const getServerSideProps: GetServerSideProps = async (ctx) => {
     },
   });
 
-  await Promise.all([
-    ssr.fetchQuery("event.getAllByUser"),
-    ssr.fetchQuery("auth.getSession"),
-  ]);
+  try {
+    await Promise.all([
+      ssr.fetchQuery("event.user.getAllByUser"),
+      ssr.fetchQuery("auth.getSession"),
+    ]);
+  } catch (e) {
+    return {
+      redirect: {
+        permanent: false,
+        destination: "/api/auth/signin",
+      },
+    };
+  }
 
   return {
     props: {
@@ -53,8 +62,7 @@ const Home: NextPage = () => {
 };
 
 const EventsPage = () => {
-  const user = useRequiredUser();
-  const events = trpc.useQuery(["event.getAllByUser"]);
+  const events = trpc.useQuery(["event.user.getAllByUser"]);
 
   if (events.data == null) {
     return <p>Loading...</p>;
@@ -67,7 +75,7 @@ const EventsPage = () => {
         {events.data.map((event) => {
           return (
             <li key={event.id}>
-              <Link href={`/${event.slug}/lista`}>{event.name}</Link>
+              <Link href={`/${event.slug}/convidados`}>{event.name}</Link>
             </li>
           );
         })}

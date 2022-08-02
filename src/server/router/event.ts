@@ -1,7 +1,7 @@
 import { GuestAge, GuestConfirmation } from "@prisma/client";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
-import { createRouter } from "./context";
+import { createProtectedRouter, createRouter } from "./context";
 
 export const eventRouter = createRouter()
   .query("getBySlug", {
@@ -39,56 +39,52 @@ export const eventRouter = createRouter()
       return input.action;
     },
   })
-  .query("getAllByUser", {
-    async resolve({ ctx }) {
-      if (!ctx.session?.user) {
-        throw new TRPCError({
-          message: "",
-          code: "UNAUTHORIZED",
-        });
-      }
 
-      return ctx.prisma.event.findMany({
-        where: {
-          createdById: ctx.session.user.id,
-        },
-      });
-    },
-  })
-  .query("getListBySlug", {
-    input: z.object({
-      slug: z.string(),
-    }),
-    async resolve({ input, ctx }) {
-      const event = await ctx.prisma.event.findUnique({
-        where: {
-          slug: input.slug,
-        },
-        select: {
-          id: true,
-          name: true,
-          guests: {
-            orderBy: {
-              createdAt: "desc",
+  .merge(
+    "user.",
+    createProtectedRouter()
+      .query("getAllByUser", {
+        async resolve({ ctx }) {
+          return ctx.prisma.event.findMany({
+            where: {
+              createdById: ctx.session!.user.id,
             },
-          },
+          });
         },
-      });
+      })
+      .query("getListBySlug", {
+        input: z.object({
+          slug: z.string(),
+        }),
+        async resolve({ input, ctx }) {
+          const event = await ctx.prisma.event.findUnique({
+            where: {
+              slug: input.slug,
+            },
+            include: {
+              guests: {
+                orderBy: {
+                  createdAt: "desc",
+                },
+              },
+            },
+          });
 
-      return event;
-    },
-  })
-  .mutation("removeGuest", {
-    input: z.object({
-      id: z.string().cuid(),
-    }),
-    async resolve({ input, ctx }) {
-      await ctx.prisma.guest.delete({
-        where: {
-          id: input.id,
+          return event;
         },
-      });
+      })
+      .mutation("removeGuest", {
+        input: z.object({
+          id: z.string().cuid(),
+        }),
+        async resolve({ input, ctx }) {
+          await ctx.prisma.guest.delete({
+            where: {
+              id: input.id,
+            },
+          });
 
-      return true;
-    },
-  });
+          return true;
+        },
+      })
+  );

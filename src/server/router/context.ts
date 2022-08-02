@@ -1,10 +1,10 @@
-// src/server/router/context.ts
 import * as trpc from "@trpc/server";
 import * as trpcNext from "@trpc/server/adapters/next";
 import { unstable_getServerSession as getServerSession } from "next-auth";
 
 import { authOptions as nextAuthOptions } from "@/pages/api/auth/[...nextauth]";
 import { prisma } from "@/server/db/client";
+import { TRPCError } from "@trpc/server";
 
 export const createContext = async (
   opts?: trpcNext.CreateNextContextOptions
@@ -26,3 +26,21 @@ export const createContext = async (
 type Context = trpc.inferAsyncReturnType<typeof createContext>;
 
 export const createRouter = () => trpc.router<Context>();
+
+export const createProtectedRouter = () =>
+  createRouter().middleware(async ({ ctx, next }) => {
+    if (!ctx.session?.user) {
+      throw new TRPCError({
+        message: "",
+        code: "UNAUTHORIZED",
+      });
+    }
+
+    return next({
+      ctx: {
+        ...ctx,
+        // infers that `session` is non-nullable to downstream resolvers
+        session: { ...ctx.session, user: ctx.session.user },
+      },
+    });
+  });

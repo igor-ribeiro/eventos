@@ -28,12 +28,12 @@ export function generateCsv<T>(
   return data.join(LINE_SEPARATOR);
 }
 
-export function downloadCsv(data: string, name: string = "convidados") {
+export function downloadFile(data: string, name: string) {
   const url = URL.createObjectURL(new Blob([data]));
 
   const a: HTMLAnchorElement = (window as Window).document.createElement("a");
   a.href = url;
-  a.download = `${name}.csv`;
+  a.download = name;
 
   a.click();
 
