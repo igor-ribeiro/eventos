@@ -67,13 +67,15 @@ export const getServerSideProps: GetServerSideProps = async (ctx) => {
     await ssr.fetchQuery("event.user.getListBySlug", {
       slug: ctx.query.slug as string,
     });
-  } catch (e) {
-    return {
-      redirect: {
-        permanent: false,
-        destination: "/api/auth/signin",
-      },
-    };
+  } catch (e: any) {
+    if (e.code === "UNAUTHORIZED") {
+      return {
+        redirect: {
+          permanent: false,
+          destination: "/api/auth/signin",
+        },
+      };
+    }
   }
 
   return {

@@ -42,13 +42,15 @@ export const getServerSideProps: GetServerSideProps = async (ctx) => {
       ssr.fetchQuery("event.user.getAllByUser"),
       ssr.fetchQuery("auth.getSession"),
     ]);
-  } catch (e) {
-    return {
-      redirect: {
-        permanent: false,
-        destination: "/api/auth/signin",
-      },
-    };
+  } catch (e: any) {
+    if (e.code === "UNAUTHORIZED") {
+      return {
+        redirect: {
+          permanent: false,
+          destination: "/api/auth/signin",
+        },
+      };
+    }
   }
 
   return {
