@@ -100,7 +100,7 @@ const EventPage: NextPage = () => {
         onSubmit={onSubmit}
         action=""
       >
-        <input type="hidden" name="event.public.id" value={event.data.id} />
+        <input type="hidden" name="event_id" value={event.data.id} />
 
         <div className="form-control mb-4">
           <label className="label font-bold" htmlFor="name">
