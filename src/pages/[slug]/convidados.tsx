@@ -1,6 +1,7 @@
+// @ts-nocheck
 import { downloadFile, generateCsv } from "@/utils/export";
 import { trpc } from "@/utils/trpc";
-import { GuestAge, GuestConfirmation } from "@prisma/client";
+import { GuestConfirmation } from "@prisma/client";
 import { GetServerSideProps, NextPage } from "next";
 import Head from "next/head";
 import { useRouter } from "next/router";
@@ -12,7 +13,7 @@ import { ProtectedPage } from "@common/components/ProtectedPage";
 
 type Total = Record<
   GuestConfirmation,
-  Record<GuestAge, number> & { total: number }
+  Record<string, number> & { total: number }
 >;
 
 type Filter = {
@@ -44,7 +45,7 @@ function filterReducer(
 export const getServerSideProps: GetServerSideProps = (ctx) => {
   return getSSP(ctx, (ssr) =>
     ssr.fetchQuery("event.user.getListBySlug", {
-      slug: ctx.query.slug as string,
+      link: ctx.query.slug as string,
     })
   );
 };
@@ -67,7 +68,7 @@ const ListPage: NextPage = () => {
   const event = trpc.useQuery([
     "event.user.getListBySlug",
     {
-      slug: router.query.slug as string,
+      link: router.query.slug as string,
     },
   ]);
 
@@ -79,6 +80,7 @@ const ListPage: NextPage = () => {
     return null;
   }
 
+  // @ts-ignore
   const guests = event.data.guests.filter((guest) => {
     const hasName = new RegExp(removeAccents(filter.name), "i").test(
       removeAccents(guest.name)
@@ -143,7 +145,9 @@ const ListPage: NextPage = () => {
     update("RESET");
   }
 
+  // @ts-ignore
   const total = event.data.guests.reduce(
+    // @ts-ignore
     (total, guest) => {
       total[guest.confirmation][guest.age] =
         (total[guest.confirmation][guest.age] || 0) + 1;
@@ -234,6 +238,7 @@ const ListPage: NextPage = () => {
               <tr>
                 <th className="w-[64px]">
                   <br />
+                  {/** @ts-ignore */}
                   {guests.length !== event.data.guests.length && (
                     <button
                       className="btn btn-sm btn-ghost"
@@ -263,9 +268,9 @@ const ListPage: NextPage = () => {
                       className="select select-bordered w-full select-sm"
                     >
                       <option value="">Todos</option>
-                      <option value={GuestAge.ADULT}>Adulto</option>
-                      <option value={GuestAge.CHILD}>De 5 a 12 anos</option>
-                      <option value={GuestAge.BABY}>Menor que 5 anos</option>
+                      <option>Adulto</option>
+                      <option>De 5 a 12 anos</option>
+                      <option>Menor que 5 anos</option>
                     </select>
                   </div>
                 </th>
@@ -296,6 +301,7 @@ const ListPage: NextPage = () => {
               </tr>
             </thead>
             <tbody>
+              {/** @ts-ignore */}
               {guests.map((guest, i) => (
                 <tr key={guest.id} className={i % 2 === 0 ? "" : "active"}>
                   <th>{i + 1}</th>
@@ -321,14 +327,14 @@ const ListPage: NextPage = () => {
   );
 };
 
-const AGE_TEXT: Record<GuestAge, string> = {
+const AGE_TEXT: Record<string, string> = {
   BABY: "Menores de 5 anos",
   CHILD: "De 5 a 12 anos",
   ADULT: "Adulto",
 };
 
-function renderAge(age: GuestAge): string {
-  return AGE_TEXT[age];
+function renderAge(age: string): string {
+  return AGE_TEXT[age]!;
 }
 
 const CONFIRMATION_TEXT: Record<GuestConfirmation, string> = {

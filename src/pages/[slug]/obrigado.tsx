@@ -10,7 +10,7 @@ const ThankYouPage: NextPage = () => {
   const event = trpc.useQuery([
     "event.public.getBySlug",
     {
-      slug: router.query.slug as string,
+      link: router.query.slug as string,
     },
   ]);
 

@@ -1,7 +1,7 @@
 import { Hero } from "@/components/Hero";
 import { formDataToJson } from "@/utils/formData-to-json";
 import { inferMutationInput, trpc } from "@/utils/trpc";
-import { GuestAge, GuestConfirmation } from "@prisma/client";
+import { GuestConfirmation } from "@prisma/client";
 import { NextPage } from "next";
 import Head from "next/head";
 import { useRouter } from "next/router";
@@ -16,7 +16,7 @@ const EventPage: NextPage = () => {
   const event = trpc.useQuery([
     "event.public.getBySlug",
     {
-      slug: router.query.slug as string,
+      link: router.query.slug as string,
     },
   ]);
 
@@ -118,14 +118,10 @@ const EventPage: NextPage = () => {
           <label className="label font-bold" htmlFor="age">
             Idade
           </label>
-          <select
-            name="age"
-            className="select select-bordered w-full"
-            defaultValue={GuestAge.ADULT}
-          >
-            <option value={GuestAge.ADULT}>Adulto</option>
-            <option value={GuestAge.CHILD}>De 5 a 12 anos</option>
-            <option value={GuestAge.BABY}>Menor que 5 anos</option>
+          <select name="age" className="select select-bordered w-full">
+            <option>Adulto</option>
+            <option>De 5 a 12 anos</option>
+            <option>Menor que 5 anos</option>
           </select>
         </div>
 

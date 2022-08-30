@@ -1,11 +1,4 @@
-import {
-  Event,
-  Guest,
-  GuestAge,
-  GuestConfirmation,
-  Prisma,
-  User,
-} from "@prisma/client";
+import { Event, Guest, GuestConfirmation, Prisma, User } from "@prisma/client";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import { createProtectedRouter, createRouter } from "./context";

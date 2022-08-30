@@ -35,7 +35,7 @@ export const EventsTable = () => {
                 <tr key={event.id}>
                   <th>{i + 1}</th>
                   <td>
-                    <Link href={`/${event.slug}/convidados`}>{event.name}</Link>
+                    <Link href={`/${event.link}/convidados`}>{event.name}</Link>
                   </td>
                   <td>{event.date.toLocaleDateString()}</td>
                 </tr>

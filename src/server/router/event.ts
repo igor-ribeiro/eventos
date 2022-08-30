@@ -1,11 +1,5 @@
-import {
-  Event,
-  Guest,
-  GuestAge,
-  GuestConfirmation,
-  Prisma,
-  User,
-} from "@prisma/client";
+// @ts-nocheck
+import { Event, Guest, GuestConfirmation, Prisma, User } from "@prisma/client";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import { createProtectedRouter, createRouter } from "./context";
@@ -13,12 +7,12 @@ import { createProtectedRouter, createRouter } from "./context";
 export const eventPublicRouter = createRouter()
   .query("getBySlug", {
     input: z.object({
-      slug: z.string(),
+      link: z.string(),
     }),
     async resolve({ input, ctx }) {
       const event = await ctx.prisma.event.findUnique({
         where: {
-          slug: input.slug,
+          link: input.link,
         },
       });
 
@@ -29,7 +23,7 @@ export const eventPublicRouter = createRouter()
     input: z.object({
       event_id: z.string().cuid(),
       name: z.string().min(3),
-      age: z.nativeEnum(GuestAge),
+      age: z.string(),
       confirmation: z.nativeEnum(GuestConfirmation),
       action: z.enum(["next", "finalize"]),
     }),
@@ -63,12 +57,12 @@ export const eventPrivateRouter = createProtectedRouter()
   })
   .query("getListBySlug", {
     input: z.object({
-      slug: z.string(),
+      link: z.string(),
     }),
     async resolve({ input, ctx }) {
       const event = await ctx.prisma.event.findUnique({
         where: {
-          slug: input.slug,
+          link: input.link,
         },
         include: {
           guests: {
