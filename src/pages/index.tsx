@@ -1,11 +1,11 @@
 import type { GetServerSideProps, NextPage } from "next";
 import Head from "next/head";
-import { getSSP } from "@/server/get-ssp";
 import { ProtectedPage } from "@common/components/ProtectedPage";
 import { EventsTable } from "@/components/EventsTable";
+import { ssp } from "@common/server/ssp";
 
 export const getServerSideProps: GetServerSideProps = (ctx) => {
-  return getSSP(ctx, (ssr) => ssr.fetchQuery("event.user.getAllByUser"));
+  return ssp(ctx, (ssr) => ssr.fetchQuery("event.user.getAllByUser"));
 };
 
 const Home: NextPage = () => {

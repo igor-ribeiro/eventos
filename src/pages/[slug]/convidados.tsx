@@ -8,8 +8,8 @@ import { useRouter } from "next/router";
 import { ChangeEvent, useReducer, useRef } from "react";
 import removeAccents from "remove-accents";
 import { ClearIcon, DownloadIcon, RemoveIcon } from "@/components/Icons";
-import { getSSP } from "@/server/get-ssp";
 import { ProtectedPage } from "@common/components/ProtectedPage";
+import { ssp } from "@common/server/ssp";
 
 type Total = Record<
   GuestConfirmation,
@@ -43,7 +43,7 @@ function filterReducer(
 }
 
 export const getServerSideProps: GetServerSideProps = (ctx) => {
-  return getSSP(ctx, (ssr) =>
+  return ssp(ctx, (ssr) =>
     ssr.fetchQuery("event.user.getListBySlug", {
       link: ctx.query.slug as string,
     })
