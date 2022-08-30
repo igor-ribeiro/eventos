@@ -35,7 +35,7 @@ export default function CreateCompanyPage() {
       </Head>
 
       <div className="w-content">
-        <form className="form max-w-lg">
+        <form className="form max-w-lg mx-auto">
           <h2 className="mt-0">Informações do Evento</h2>
 
           <Input
@@ -65,51 +65,53 @@ export default function CreateCompanyPage() {
 
           <h2 className="mt-0">Informações dos Convidados</h2>
 
-          <table className="table table-zebra w-full border border-base-300 table-compact">
-            <thead>
-              <tr>
-                <th className="w-[56px]"></th>
-                <th>Nome</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody>
-              {fields.map((field, i) => {
-                return (
-                  <tr key={field.id}>
-                    <th>{i + 1}</th>
-                    <td>{field.name}</td>
-                    <td>
-                      <button
-                        type="button"
-                        className="btn-action"
-                        onClick={() => removeField(field.id)}
-                      >
-                        <DeleteIcon />
-                      </button>
-                    </td>
-                  </tr>
-                );
-              })}
+          <div className="overflow-x-auto">
+            <table className="table table-zebra w-full border border-base-300 table-compact">
+              <thead>
+                <tr>
+                  <th className="w-[56px]"></th>
+                  <th>Nome</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                {fields.map((field, i) => {
+                  return (
+                    <tr key={field.id}>
+                      <th>{i + 1}</th>
+                      <td>{field.name}</td>
+                      <td>
+                        <button
+                          type="button"
+                          className="btn-action"
+                          onClick={() => removeField(field.id)}
+                        >
+                          <DeleteIcon />
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
 
-              <tr>
-                <td colSpan={3}>
-                  <button
-                    className="btn btn-outline btn-xs"
-                    type="button"
-                    onClick={() =>
-                      dispatchCustomEvent("modal", {
-                        id: "select-field-modal",
-                        action: "open",
-                      })
-                    }
-                  >
-                    Adicionar
-                  </button>
-                </td>
-              </tr>
-            </tbody>
-          </table>
+                <tr>
+                  <td colSpan={3}>
+                    <button
+                      className="btn btn-outline btn-xs"
+                      type="button"
+                      onClick={() =>
+                        dispatchCustomEvent("modal", {
+                          id: "select-field-modal",
+                          action: "open",
+                        })
+                      }
+                    >
+                      Adicionar
+                    </button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
 
           <div className="divider"></div>
 
@@ -168,37 +170,49 @@ const FieldModal = ({ onSelect }: { onSelect: (field: Field) => void }) => {
         data-open={opened}
         key={String(opened)}
       >
-        <div className="modal-box border border-base-300">
+        <div className="modal-box border border-base-300 w-fit">
           <h3 className="font-bold text-lg">
             Escolher Informação de Convidado
           </h3>
 
-          <div className="form-control w-full mb-2">
-            <label className="label">
-              <span className="label-text">Informação</span>
-            </label>
+          <div className="overflow-x-auto">
+            <table className="table w-full border border-base-300 table-compact">
+              <tbody>
+                {fields.data?.map((field, i) => {
+                  return (
+                    <>
+                      <tr key={field.id}>
+                        <td className="w-[56px]">
+                          <input type="checkbox" className="toggle" />
+                        </td>
+                        <td>
+                          <span>{field.name}</span>
+                          <span className="badge badge-info badge-sm ml-2 font-bold">
+                            {field.type}
+                          </span>
+                        </td>
+                        <td>{field.description}</td>
+                      </tr>
 
-            <select
-              className="select select-bordered w-full"
-              name="field_id"
-              onChange={(e) => setFieldId(e.target.value)}
-            >
-              <option></option>
-              {fields.data?.map((field) => {
-                return (
-                  <option key={field.id} value={field.id}>
-                    {field.name}
-                  </option>
-                );
-              })}
-            </select>
+                      {field.options?.map((option) => (
+                        <tr key={option.id} className="active text-xs">
+                          <td></td>
+                          <td colSpan={2}>{option.name}</td>
+                          <td>{option.description}</td>
+                        </tr>
+                      ))}
+                    </>
+                  );
+                })}
+              </tbody>
+            </table>
           </div>
 
           <div className="modal-action">
             <button className="btn btn-ghost" onClick={() => setOpened(false)}>
               Cancelar
             </button>
-            <button className="btn btn-secondary" onClick={onConfirm}>
+            <button className="btn" onClick={onConfirm}>
               Confirmar
             </button>
           </div>

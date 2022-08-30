@@ -1,39 +1,53 @@
+// src/server/router/context.ts
 import * as trpc from "@trpc/server";
 import * as trpcNext from "@trpc/server/adapters/next";
-import { unstable_getServerSession as getServerSession } from "next-auth";
+import {
+  Session,
+  unstable_getServerSession as getServerSession,
+} from "next-auth";
+import { authOptions as nextAuthOptions } from "../../pages/api/auth/[...nextauth]";
+import { prisma } from "../db/client";
 
-import { authOptions as nextAuthOptions } from "@/pages/api/auth/[...nextauth]";
-import { prisma } from "@/server/db/client";
-import { TRPCError } from "@trpc/server";
+type CreateContextOptions = {
+  session: Session | null;
+};
 
-export const createContext = async (
-  opts?: trpcNext.CreateNextContextOptions
-) => {
-  const req = opts?.req;
-  const res = opts?.res;
-
-  const session =
-    req && res && (await getServerSession(req, res, nextAuthOptions));
-
+/** Use this helper for:
+ * - testing, where we dont have to Mock Next.js' req/res
+ * - trpc's `createSSGHelpers` where we don't have req/res
+ **/
+export const createContextInner = async (opts: CreateContextOptions) => {
   return {
-    req,
-    res,
-    session,
+    session: opts.session,
     prisma,
   };
+};
+
+/**
+ * This is the actual context you'll use in your router
+ * @link https://trpc.io/docs/context
+ **/
+export const createContext = async (
+  opts: trpcNext.CreateNextContextOptions
+) => {
+  const session = await getServerSession(opts.req, opts.res, nextAuthOptions);
+
+  return await createContextInner({
+    session,
+  });
 };
 
 type Context = trpc.inferAsyncReturnType<typeof createContext>;
 
 export const createRouter = () => trpc.router<Context>();
 
-export const createProtectedRouter = () =>
-  createRouter().middleware(async ({ ctx, next }) => {
-    if (!ctx.session?.user) {
-      throw new TRPCError({
-        message: "",
-        code: "UNAUTHORIZED",
-      });
+/**
+ * Creates a tRPC router that asserts all queries and mutations are from an authorized user. Will throw an unauthorized error if a user is not signed in.
+ */
+export function createProtectedRouter() {
+  return createRouter().middleware(({ ctx, next }) => {
+    if (!ctx.session || !ctx.session.user) {
+      throw new trpc.TRPCError({ code: "UNAUTHORIZED" });
     }
 
     return next({
@@ -44,3 +58,4 @@ export const createProtectedRouter = () =>
       },
     });
   });
+}
