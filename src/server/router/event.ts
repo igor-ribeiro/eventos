@@ -82,6 +82,26 @@ export const eventPrivateRouter = createProtectedRouter()
       return event;
     },
   })
+  .mutation("upsert", {
+    input: z.object({
+      name: z.string(),
+      link: z.string(),
+      description: z.string(),
+      date: z.date(),
+      confirmationDeadline: z.date(),
+      fields: z.string().array(),
+    }),
+    async resolve({ input, ctx }) {
+      return ctx.prisma.event.create({
+        data: {
+          name: input.name,
+          description: input.description,
+          link: input.link,
+          date: input.date,
+        },
+      });
+    },
+  })
   .mutation("removeGuest", {
     input: z.object({
       id: z.string().cuid(),
@@ -91,65 +111,6 @@ export const eventPrivateRouter = createProtectedRouter()
         where: {
           id: input.id,
         },
-      });
-    },
-  })
-  .mutation("importEvent", {
-    input: z.object({
-      data: z.string(),
-    }),
-    async resolve({ input, ctx }) {
-      const {
-        slug,
-        name,
-        description,
-        imageUrl,
-        date,
-        users,
-        createdById,
-        guests,
-      }: Event & {
-        createdById?: string;
-        users?: User[];
-        guests: Guest[];
-      } = JSON.parse(input.data);
-
-      const data: Prisma.EventCreateInput = {
-        slug,
-        name,
-        description,
-        imageUrl,
-        date,
-        ...(users
-          ? {
-              users: {
-                connect: users.map((user) => ({
-                  email: user.email,
-                })),
-              },
-            }
-          : {}),
-        // Legacy schema
-        ...(createdById
-          ? {
-              users: {
-                connect: [
-                  {
-                    id: ctx.session.user.id,
-                  },
-                ],
-              },
-            }
-          : {}),
-        guests: {
-          create: guests.map(
-            ({ id, createdAt, updatedAt, eventId, ...guest }) => guest
-          ),
-        },
-      };
-
-      return ctx.prisma.event.create({
-        data,
       });
     },
   });

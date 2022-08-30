@@ -26,7 +26,10 @@
     "next-auth.d.ts",
     "**/*.ts",
     "**/*.tsx",
-    "**/*.js"
+    "**/*.js",
+    "./app-common/**/*.ts",
+    "./app-common/**/*.tsx",
+    "./app-common/**/*.js"
   ],
   "exclude": ["node_modules"]
 }

@@ -50,6 +50,7 @@ model User {
   accounts Account[]
   sessions Session[]
   events   Event[]
+  fields   Field[]
 }
 
 model VerificationToken {
@@ -63,22 +64,76 @@ model VerificationToken {
 model Event {
   id          String   @id @default(cuid())
   name        String
-  slug        String   @unique
+  link        String   @unique
   description String   @db.MediumText()
   imageUrl    String?
   date        DateTime
 
   users  User[]
   guests Guest[]
+  fields FieldsOnEvents[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
-enum GuestAge {
-  ADULT
-  CHILD
-  BABY
+enum FieldType {
+  TEXT
+  OPTION
+  NUMBER
+}
+
+enum Visibility {
+  PRIVATE
+  PUBLIC
+}
+
+model Field {
+  id          String     @id @default(cuid())
+  name        String
+  description String
+  type        FieldType  @default(TEXT)
+  visibility  Visibility @default(PUBLIC)
+
+  options FieldOption[]
+  events  FieldsOnEvents[]
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  userId String
+
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  archivedAt DateTime?
+}
+
+model FieldOption {
+  id          String @id @default(cuid())
+  name        String
+  description String
+
+  field   Field  @relation(fields: [fieldId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  fieldId String
+
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  archivedAt DateTime?
+}
+
+model FieldsOnEvents {
+  id String @id @default(cuid())
+
+  event   Event  @relation(fields: [eventId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  eventId String
+
+  field   Field  @relation(fields: [fieldId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  fieldId String
+}
+
+model FieldsOnGuests {
+  id    String @id @default(cuid())
+  value String
+
+  guests Guest[]
 }
 
 enum GuestConfirmation {
@@ -89,12 +144,12 @@ enum GuestConfirmation {
 
 model Guest {
   id           String            @id @default(cuid())
-  name         String
-  age          GuestAge          @default(ADULT)
   confirmation GuestConfirmation @default(YES)
 
   event   Event  @relation(fields: [eventId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   eventId String
+
+  fields FieldsOnGuests[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

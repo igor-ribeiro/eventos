@@ -8,7 +8,7 @@ import { ChangeEvent, useReducer, useRef } from "react";
 import removeAccents from "remove-accents";
 import { ClearIcon, DownloadIcon, RemoveIcon } from "@/components/Icons";
 import { getSSP } from "@/server/get-ssp";
-import { Protected } from "..";
+import { ProtectedPage } from "@common/components/ProtectedPage";
 
 type Total = Record<
   GuestConfirmation,
@@ -51,9 +51,9 @@ export const getServerSideProps: GetServerSideProps = (ctx) => {
 
 const GuestListPage: NextPage = () => {
   return (
-    <Protected>
+    <ProtectedPage>
       <ListPage />
-    </Protected>
+    </ProtectedPage>
   );
 };
 
@@ -172,14 +172,18 @@ const ListPage: NextPage = () => {
   const totalConfirmed = total.YES.total + total.MAYBE.total;
 
   return (
-    <div className="p-4">
+    <div className="w-content">
       <Head>
         <title>Convidados - {event.data.name}</title>
       </Head>
 
       <div className="flex justify-between">
         <h1 className="mb-0 uppercase">{event.data.name}</h1>
-        <button className="btn" title="Exportar Evento" onClick={onExportEvent}>
+        <button
+          className="btn btn-primary"
+          title="Exportar Evento"
+          onClick={onExportEvent}
+        >
           <DownloadIcon />
         </button>
       </div>
@@ -232,7 +236,7 @@ const ListPage: NextPage = () => {
                   <br />
                   {guests.length !== event.data.guests.length && (
                     <button
-                      className="btn btn-sm "
+                      className="btn btn-sm btn-ghost"
                       type="button"
                       onClick={onClearFilter}
                     >
@@ -282,7 +286,7 @@ const ListPage: NextPage = () => {
                 <th className="align-top w-[30px]">
                   <br />
                   <button
-                    className="btn btn-sm"
+                    className="btn btn-primary btn-sm"
                     type="button"
                     onClick={onExportGuestList}
                   >

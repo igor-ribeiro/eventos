@@ -6,7 +6,9 @@
     "app-common"
   ],
   "scripts": {
+    "prod:install": "node ./init-submodule.js && npm i",
     "dev": "PORT=3301 next dev",
+    "studio": "BROWSER=NONE npx prisma studio",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
@@ -15,6 +17,7 @@
   "dependencies": {
     "@next-auth/prisma-adapter": "1.0.4",
     "@prisma/client": "4.1.0",
+    "@ribeirolabs/events": "^3.0.0",
     "@trpc/client": "9.26.2",
     "@trpc/next": "9.26.2",
     "@trpc/react": "9.26.2",
