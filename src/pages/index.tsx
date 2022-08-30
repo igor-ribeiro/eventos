@@ -13,6 +13,7 @@ import { Session } from "next-auth";
 import Link from "next/link";
 import { UploadIcon } from "@/components/Icons";
 import { getSSP } from "@/server/get-ssp";
+import { ProtectedPage } from "@common/components/ProtectedPage";
 
 export const getServerSideProps: GetServerSideProps = (ctx) => {
   return getSSP(ctx, (ssr) => ssr.fetchQuery("event.user.getAllByUser"));
@@ -20,9 +21,9 @@ export const getServerSideProps: GetServerSideProps = (ctx) => {
 
 const Home: NextPage = () => {
   return (
-    <Protected>
+    <ProtectedPage>
       <EventsPage />
-    </Protected>
+    </ProtectedPage>
   );
 };
 
@@ -63,12 +64,12 @@ const EventsPage = () => {
   }
 
   return (
-    <div className="p-4">
+    <>
       <Head>
         <title>Meus Eventos</title>
       </Head>
 
-      <div className="flex justify-between">
+      <div className="w-content">
         <h1 className="mb-2">Meus Eventos</h1>
 
         <input
@@ -100,30 +101,7 @@ const EventsPage = () => {
           );
         })}
       </ul>
-    </div>
-  );
-};
-
-const ProtectedContext = createContext<Session | null>(null);
-
-export const Protected = ({ children }: { children: ReactNode }) => {
-  const session = trpc.useQuery(["auth.getSession"]);
-  const router = useRouter();
-
-  useEffect(() => {
-    if (session.data == null && session.status === "success") {
-      router.push("/api/auth/signin");
-    }
-  }, [session, router]);
-
-  if (session.data == null) {
-    return <p>Loading...</p>;
-  }
-
-  return (
-    <ProtectedContext.Provider value={session.data!}>
-      {children}
-    </ProtectedContext.Provider>
+    </>
   );
 };
 

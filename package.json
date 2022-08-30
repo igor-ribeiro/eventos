@@ -2,8 +2,11 @@
   "name": "eventos",
   "version": "0.1.0",
   "private": true,
+  "workspaces": [
+    "app-common"
+  ],
   "scripts": {
-    "dev": "next dev",
+    "dev": "PORT=3301 next dev",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
