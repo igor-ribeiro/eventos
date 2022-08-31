@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { downloadFile, generateCsv } from "@/utils/export";
 import { trpc } from "@/utils/trpc";
 import { GuestConfirmation } from "@prisma/client";
@@ -7,9 +6,10 @@ import Head from "next/head";
 import { useRouter } from "next/router";
 import { ChangeEvent, useReducer, useRef } from "react";
 import removeAccents from "remove-accents";
-import { ClearIcon, DownloadIcon, RemoveIcon } from "@/components/Icons";
+import { ClearIcon, DownloadIcon } from "@/components/Icons";
 import { ProtectedPage } from "@common/components/ProtectedPage";
 import { ssp } from "@common/server/ssp";
+import { DeleteIcon } from "@common/components/Icons";
 
 type Total = Record<
   GuestConfirmation,
@@ -44,8 +44,8 @@ function filterReducer(
 
 export const getServerSideProps: GetServerSideProps = (ctx) => {
   return ssp(ctx, (ssr) =>
-    ssr.fetchQuery("event.user.getListBySlug", {
-      link: ctx.query.slug as string,
+    ssr.fetchQuery("event.getListByLink", {
+      link: ctx.query.link as string,
     })
   );
 };
@@ -63,12 +63,12 @@ const ListPage: NextPage = () => {
 
   const router = useRouter();
 
-  trpc.useQuery(["event.user.getAllByUser"]);
+  // trpc.useQuery(["event.user.getAllByUser"]);
 
   const event = trpc.useQuery([
-    "event.user.getListBySlug",
+    "event.getListByLink",
     {
-      link: router.query.slug as string,
+      link: router.query.link as string,
     },
   ]);
 
@@ -82,12 +82,14 @@ const ListPage: NextPage = () => {
 
   // @ts-ignore
   const guests = event.data.guests.filter((guest) => {
-    const hasName = new RegExp(removeAccents(filter.name), "i").test(
-      removeAccents(guest.name)
-    );
-
-    const hasAge = guest.age === filter.age;
-    const hasConfirmation = guest.confirmation === filter.confirmation;
+    const hasName = true;
+    const hasAge = true;
+    const hasConfirmation = true;
+    // const hasName = new RegExp(removeAccents(filter.name), "i").test(
+    //   removeAccents(guest.name)
+    // );
+    // const hasAge = guest.age === filter.age;
+    // const hasConfirmation = guest.confirmation === filter.confirmation;
 
     if (filter.name && !hasName) {
       return false;
@@ -249,6 +251,10 @@ const ListPage: NextPage = () => {
                     </button>
                   )}
                 </th>
+                {guests[0]?.fields.map(({ id, field }) => {
+                  return <th key={id}>{field.name}</th>;
+                })}
+                {/*
                 <th>
                   <div className="form-control">
                     <label htmlFor="name">Nome</label>
@@ -288,6 +294,7 @@ const ListPage: NextPage = () => {
                     </select>
                   </div>
                 </th>
+                */}
                 <th className="align-top w-[30px]">
                   <br />
                   <button
@@ -305,16 +312,17 @@ const ListPage: NextPage = () => {
               {guests.map((guest, i) => (
                 <tr key={guest.id} className={i % 2 === 0 ? "" : "active"}>
                   <th>{i + 1}</th>
-                  <td>{guest.name}</td>
-                  <td>{renderAge(guest.age)}</td>
-                  <td>{renderConfirmation(guest.confirmation)}</td>
+                  {guest.fields.map(({ id, field, value }) => {
+                    return <td key={id}>{value}</td>;
+                  })}
                   <td className="text-center">
                     <button
                       type="button"
+                      className="btn btn-sm btn-action"
                       onClick={() => onRemoveGuest(guest.id)}
                       disabled={removeGuest.status === "loading"}
                     >
-                      <RemoveIcon />
+                      <DeleteIcon />
                     </button>
                   </td>
                 </tr>

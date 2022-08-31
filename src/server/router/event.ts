@@ -131,7 +131,22 @@ export const eventPrivateRouter = createProtectedRouter()
           link: input.link,
         },
         include: {
+          fields: {
+            include: {
+              field: true,
+            },
+            orderBy: {
+              sequence: "asc",
+            },
+          },
           guests: {
+            include: {
+              fields: {
+                include: {
+                  field: true,
+                },
+              },
+            },
             orderBy: {
               createdAt: "desc",
             },
