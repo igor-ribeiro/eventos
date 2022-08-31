@@ -1,9 +1,12 @@
 import { trpc } from "@/utils/trpc";
-import { AddIcon } from "@common/components/Icons";
+import { AddIcon, DeleteIcon, ShareIcon } from "@common/components/Icons";
+import { addToast } from "@common/components/Toast";
+import { copyToClipboard } from "@common/utils/clipboard";
 import Link from "next/link";
 
 export const EventsTable = () => {
   const events = trpc.useQuery(["event.getAllByUser"]);
+  const deleteEvent = trpc.useMutation("event.delete");
 
   if (events.data == null) {
     return null;
@@ -27,6 +30,7 @@ export const EventsTable = () => {
               <th className="w-[56px]"></th>
               <th>Nome</th>
               <th>Data</th>
+              <th></th>
             </tr>
           </thead>
           <tbody>
@@ -38,6 +42,42 @@ export const EventsTable = () => {
                     <Link href={`/${event.link}/convidados`}>{event.name}</Link>
                   </td>
                   <td>{event.date.toLocaleDateString()}</td>
+                  <td className="text-end">
+                    <button
+                      className="btn btn-action"
+                      onClick={() => {
+                        copyToClipboard(
+                          `${window.location.origin}/${event.link}`
+                        ).then(() => addToast("Link copiado", "info"));
+                      }}
+                    >
+                      <ShareIcon />
+                    </button>
+
+                    <button
+                      className="btn btn-action"
+                      onClick={() => {
+                        deleteEvent
+                          .mutateAsync({ id: event.id })
+                          .then((old) => {
+                            addToast(
+                              `Evento "${old.name}" removido`,
+                              "success"
+                            );
+                            events.refetch();
+                          })
+                          .catch(() =>
+                            addToast(
+                              "Não foi possível remover o evento",
+                              "error"
+                            )
+                          );
+                      }}
+                      data-loading={deleteEvent.isLoading}
+                    >
+                      {deleteEvent.isLoading ? null : <DeleteIcon />}
+                    </button>
+                  </td>
                 </tr>
               );
             })}

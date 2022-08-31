@@ -10,6 +10,7 @@ import { dispatchCustomEvent } from "@ribeirolabs/events";
 import { useEvent } from "@ribeirolabs/events/react";
 import { GetServerSideProps } from "next";
 import Head from "next/head";
+import Link from "next/link";
 import { FormEvent, useCallback, useMemo, useState } from "react";
 
 export const getServerSideProps: GetServerSideProps = (ctx) => {
@@ -122,7 +123,7 @@ export default function CreateCompanyPage() {
                           className="btn-action"
                           onClick={() => removeField(field.id)}
                         >
-                          <DeleteIcon />
+                          <RemoveIcon />
                         </button>
                       </td>
                     </tr>
@@ -155,9 +156,9 @@ export default function CreateCompanyPage() {
             <button className="btn btn-primary" type="submit">
               Criar
             </button>
-            <button className="btn btn-ghost" type="button">
-              Cancelar
-            </button>
+            <Link href="/">
+              <a className="btn btn-ghost">Cancelar</a>
+            </Link>
           </div>
         </form>
       </div>

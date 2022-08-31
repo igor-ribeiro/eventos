@@ -96,6 +96,18 @@ export const eventPrivateRouter = createProtectedRouter()
       });
     },
   })
+  .mutation("delete", {
+    input: z.object({
+      id: z.string().cuid(),
+    }),
+    async resolve({ ctx, input }) {
+      return ctx.prisma.event.delete({
+        where: {
+          id: input.id,
+        },
+      });
+    },
+  })
   .query("getAllByUser", {
     async resolve({ ctx }) {
       return ctx.prisma.event.findMany({
