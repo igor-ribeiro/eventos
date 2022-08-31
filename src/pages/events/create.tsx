@@ -11,20 +11,30 @@ import { useEvent } from "@ribeirolabs/events/react";
 import { GetServerSideProps } from "next";
 import Head from "next/head";
 import Link from "next/link";
-import { FormEvent, useCallback, useMemo, useState } from "react";
+import { useRouter } from "next/router";
+import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 
 export const getServerSideProps: GetServerSideProps = (ctx) => {
   return ssp(ctx, (ssr) => [ssr.prefetchQuery("field.getAll")]);
 };
 
 export default function CreateCompanyPage() {
+  const router = useRouter();
   const create = trpc.useMutation("event.create");
 
   const [name, setName] = useState("");
   const [link, setLink] = useState("");
   const [fields, setFields] = useState<Field[]>([]);
 
-  useMemo(() => {
+  const origin = useMemo(() => {
+    if (typeof window === "undefined") {
+      return "/";
+    }
+
+    return window.location.origin;
+  }, []);
+
+  useEffect(() => {
     setLink(name.toLowerCase().replace(/\s/g, "-"));
   }, [name]);
 
@@ -78,6 +88,7 @@ export default function CreateCompanyPage() {
             value={link}
             onChange={(e) => setLink(e.target.value)}
             leading={<span>/</span>}
+            helper={link ? origin + "/" + link : ""}
             name="link"
           />
 
