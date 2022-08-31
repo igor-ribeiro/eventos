@@ -104,6 +104,7 @@ export default function CreateCompanyPage() {
                   <th className="w-[56px]"></th>
                   <th>Nome</th>
                   <th></th>
+                  <th></th>
                 </tr>
               </thead>
               <tbody>
@@ -111,19 +112,19 @@ export default function CreateCompanyPage() {
                   return (
                     <tr key={field.id}>
                       <th>{i + 1}</th>
+                      <td>{field.name}</td>
                       <td>
-                        {field.name}
                         <span className="badge badge-secondary badge-sm font-bold uppercase mx-2">
                           {getTypeText(field.type)}
                         </span>
                       </td>
-                      <td>
+                      <td className="text-end">
                         <button
                           type="button"
-                          className="btn-action"
+                          className="btn btn-action"
                           onClick={() => removeField(field.id)}
                         >
-                          <RemoveIcon />
+                          <DeleteIcon />
                         </button>
                       </td>
                     </tr>
@@ -131,9 +132,9 @@ export default function CreateCompanyPage() {
                 })}
 
                 <tr>
-                  <td colSpan={3}>
+                  <td colSpan={4}>
                     <button
-                      className="btn btn-outline btn-xs"
+                      className="btn btn-sm"
                       type="button"
                       onClick={() =>
                         dispatchCustomEvent("modal", {
@@ -198,106 +199,100 @@ const FieldModal = ({ onSelect }: { onSelect: (fields: Field[]) => void }) => {
   }
 
   return (
-    <>
-      <div
-        className="modal modal-bottom sm:modal-middle"
-        data-open={opened}
-        key={String(opened)}
-      >
-        <div className="modal-box border border-base-300 md:max-w-4xl">
-          <h3 className="font-bold text-lg">Informações dos Convidados</h3>
+    <div className="modal modal-bottom sm:modal-middle" data-open={opened}>
+      <div className="modal-box border border-base-300 md:max-w-4xl">
+        <h3 className="font-bold text-lg">Informações dos Convidados</h3>
 
-          <div className="overflow-x-auto">
-            <table className="table w-full border border-base-300 table-compact">
-              <thead>
-                <tr>
-                  <th className="w-[10ch]">Escolher</th>
-                  <th>Nome</th>
-                  <th className="w-[10ch]">Tipo</th>
-                  <th>Descrição</th>
-                </tr>
-              </thead>
-              <tbody>
-                {fields.data?.map((field, i) => {
-                  const Container =
-                    field.options.length > 0 ? "details" : "div";
+        <div className="overflow-x-auto">
+          <table className="table w-full border border-base-300 table-compact">
+            <thead>
+              <tr>
+                <th className="w-[10ch]">Escolher</th>
+                <th>Nome</th>
+                <th className="w-[10ch]">Tipo</th>
+                <th>Descrição</th>
+              </tr>
+            </thead>
+            <tbody>
+              {fields.data?.map((field, i) => {
+                const Container = field.options.length > 0 ? "details" : "div";
 
-                  const isDisabled =
-                    selectedCategories[field.category] &&
-                    !selected.includes(field);
+                const isDisabled =
+                  selectedCategories[field.category] &&
+                  !selected.includes(field);
 
-                  return (
-                    <tr
-                      key={field.id}
-                      className="align-top"
-                      data-cat={field.category}
-                    >
-                      <th className="text-center">
-                        <input
-                          type="checkbox"
-                          className="toggle"
-                          disabled={isDisabled}
-                          title={
-                            isDisabled
-                              ? `Você já selecionou um campo de ${getCategoryText(
-                                  field.category
-                                )}`
-                              : ""
-                          }
-                          onChange={(e) => {
-                            const isSelected = e.target.checked;
+                return (
+                  <tr
+                    key={field.id}
+                    className="align-top"
+                    data-cat={field.category}
+                  >
+                    <th className="text-center">
+                      <input
+                        type="checkbox"
+                        className="toggle"
+                        disabled={isDisabled}
+                        checked={selected.includes(field)}
+                        title={
+                          isDisabled
+                            ? `Você já selecionou um campo de ${getCategoryText(
+                                field.category
+                              )}`
+                            : ""
+                        }
+                        onChange={(e) => {
+                          const isSelected = e.target.checked;
 
-                            setSelected((selected) => {
-                              if (isSelected) {
-                                return selected.concat(field);
-                              }
+                          setSelected((selected) => {
+                            if (isSelected) {
+                              return selected.concat(field);
+                            }
 
-                              return selected.filter((id) => id !== field);
-                            });
-                            setSelectedCategories((categories) => {
-                              return {
-                                ...categories,
-                                [field.category]: isSelected,
-                              };
-                            });
-                          }}
-                        />
-                      </th>
-                      <td>
-                        <Container>
-                          <summary className="font-bold">{field.name}</summary>
-                          {field.options?.map((option) => (
-                            <ul key={option.id} className="active text-xs">
-                              <li>
-                                {option.name} - {option.description}
-                              </li>
-                            </ul>
-                          ))}
-                        </Container>
-                      </td>
-                      <td>
-                        <span className="badge badge-secondary badge-sm font-bold uppercase">
-                          {getTypeText(field.type)}
-                        </span>
-                      </td>
-                      <td>{field.description}</td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+                            return selected.filter((id) => id !== field);
+                          });
+                          setSelectedCategories((categories) => {
+                            return {
+                              ...categories,
+                              [field.category]: isSelected,
+                            };
+                          });
+                        }}
+                      />
+                    </th>
+                    <td>
+                      <Container>
+                        <summary className="font-bold">{field.name}</summary>
+                        {field.options?.map((option) => (
+                          <ul key={option.id} className="active text-xs">
+                            <li>
+                              {option.name} - {option.description}
+                            </li>
+                          </ul>
+                        ))}
+                      </Container>
+                    </td>
+                    <td>
+                      <span className="badge badge-secondary badge-sm font-bold uppercase">
+                        {getTypeText(field.type)}
+                      </span>
+                    </td>
+                    <td>{field.description}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
 
-          <div className="modal-action">
-            <button className="btn btn-ghost" onClick={() => setOpened(false)}>
-              Cancelar
-            </button>
-            <button className="btn" onClick={onConfirm}>
-              Confirmar
-            </button>
-          </div>
+        <div className="modal-action">
+          <button className="btn btn-ghost" onClick={() => setOpened(false)}>
+            Cancelar
+          </button>
+          <button className="btn" onClick={onConfirm}>
+            Confirmar
+          </button>
         </div>
       </div>
-    </>
+    </div>
   );
 };
