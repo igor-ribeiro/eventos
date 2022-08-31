@@ -109,7 +109,7 @@ export const eventPrivateRouter = createProtectedRouter()
       });
     },
   })
-  .query("getListBySlug", {
+  .query("getListByLink", {
     input: z.object({
       link: z.string(),
     }),

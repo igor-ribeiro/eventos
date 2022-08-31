@@ -3,7 +3,7 @@ import { AddIcon } from "@common/components/Icons";
 import Link from "next/link";
 
 export const EventsTable = () => {
-  const events = trpc.useQuery(["event.user.getAllByUser"]);
+  const events = trpc.useQuery(["event.getAllByUser"]);
 
   if (events.data == null) {
     return null;
