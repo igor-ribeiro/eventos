@@ -62,12 +62,13 @@ model VerificationToken {
 }
 
 model Event {
-  id          String   @id @default(cuid())
-  name        String
-  link        String   @unique
-  description String   @db.MediumText()
-  imageUrl    String?
-  date        DateTime
+  id                   String   @id @default(cuid())
+  name                 String
+  link                 String   @unique
+  description          String   @db.MediumText()
+  imageUrl             String?
+  date                 DateTime
+  confirmationDeadline DateTime
 
   users  User[]
   guests Guest[]
@@ -83,20 +84,28 @@ enum FieldType {
   NUMBER
 }
 
+enum FieldCategory {
+  NAME
+  AGE
+  EMAIL
+}
+
 enum Visibility {
   PRIVATE
   PUBLIC
 }
 
 model Field {
-  id          String     @id @default(cuid())
+  id          String        @id @default(cuid())
   name        String
-  description String
-  type        FieldType  @default(TEXT)
-  visibility  Visibility @default(PUBLIC)
+  description String?
+  type        FieldType     @default(TEXT)
+  category    FieldCategory
+  visibility  Visibility    @default(PUBLIC)
 
   options FieldOption[]
   events  FieldsOnEvents[]
+  guests  FieldsOnGuests[]
 
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   userId String
@@ -110,6 +119,7 @@ model FieldOption {
   id          String @id @default(cuid())
   name        String
   description String
+  sequence    Int
 
   field   Field  @relation(fields: [fieldId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   fieldId String
@@ -120,7 +130,8 @@ model FieldOption {
 }
 
 model FieldsOnEvents {
-  id String @id @default(cuid())
+  id       String @id @default(cuid())
+  sequence Int
 
   event   Event  @relation(fields: [eventId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   eventId String
@@ -133,7 +144,11 @@ model FieldsOnGuests {
   id    String @id @default(cuid())
   value String
 
-  guests Guest[]
+  field   Field  @relation(fields: [fieldId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  fieldId String
+
+  guest   Guest  @relation(fields: [guestId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  guestId String
 }
 
 enum GuestConfirmation {

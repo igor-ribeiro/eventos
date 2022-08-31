@@ -3,7 +3,8 @@ module.exports = {
   theme: {
     colors: {
       primary: "orange",
-      secondary: "white",
+      // secondary: "white",
+      secndary: "#44BBA4",
       neutral: "#0c0c0a",
     },
   },

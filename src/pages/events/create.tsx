@@ -1,21 +1,24 @@
+import { getCategoryText, getTypeText } from "@/utils/field";
 import { trpc } from "@/utils/trpc";
 import { DeleteIcon } from "@common/components/Icons";
 import { Input } from "@common/components/Input";
 import { ProtectedPage } from "@common/components/ProtectedPage";
 import { addToast } from "@common/components/Toast";
 import { ssp } from "@common/server/ssp";
-import { Field } from "@prisma/client";
+import { Field, FieldCategory } from "@prisma/client";
 import { dispatchCustomEvent } from "@ribeirolabs/events";
 import { useEvent } from "@ribeirolabs/events/react";
 import { GetServerSideProps } from "next";
 import Head from "next/head";
-import { useCallback, useMemo, useState } from "react";
+import { FormEvent, useCallback, useMemo, useState } from "react";
 
 export const getServerSideProps: GetServerSideProps = (ctx) => {
   return ssp(ctx, (ssr) => [ssr.prefetchQuery("field.getAll")]);
 };
 
 export default function CreateCompanyPage() {
+  const create = trpc.useMutation("event.create");
+
   const [name, setName] = useState("");
   const [link, setLink] = useState("");
   const [fields, setFields] = useState<Field[]>([]);
@@ -28,6 +31,30 @@ export default function CreateCompanyPage() {
     setFields((fields) => fields.filter((field) => field.id !== id));
   }
 
+  function onCreate(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+
+    const data = new FormData(e.target as HTMLFormElement);
+
+    create
+      .mutateAsync({
+        name: data.get("name") as string,
+        link: data.get("link") as string,
+        description: data.get("description") as string,
+        date: new Date(data.get("date") as string),
+        confirmationDeadline: new Date(
+          data.get("confirmation_deadline") as string
+        ),
+        fields: fields.map((field) => field.id),
+      })
+      .then((event) => {
+        addToast(`Event ${event.name} criado`, "success");
+      })
+      .catch(() => {
+        addToast("Não foi possível criar o evento", "error");
+      });
+  }
+
   return (
     <ProtectedPage>
       <Head>
@@ -35,7 +62,7 @@ export default function CreateCompanyPage() {
       </Head>
 
       <div className="w-content">
-        <form className="form max-w-lg mx-auto">
+        <form className="form max-w-lg mx-auto" onSubmit={onCreate}>
           <h2 className="mt-0">Informações do Evento</h2>
 
           <Input
@@ -58,7 +85,11 @@ export default function CreateCompanyPage() {
           <div className="grid grid-cols-2 gap-4">
             <Input label="Data" type="date" name="date" />
 
-            <Input label="Confirmar até" type="date" name="confirmation_date" />
+            <Input
+              label="Confirmar até"
+              type="date"
+              name="confirmation_deadline"
+            />
           </div>
 
           <div className="divider"></div>
@@ -79,7 +110,12 @@ export default function CreateCompanyPage() {
                   return (
                     <tr key={field.id}>
                       <th>{i + 1}</th>
-                      <td>{field.name}</td>
+                      <td>
+                        {field.name}
+                        <span className="badge badge-secondary badge-sm font-bold uppercase mx-2">
+                          {getTypeText(field.type)}
+                        </span>
+                      </td>
                       <td>
                         <button
                           type="button"
@@ -126,17 +162,18 @@ export default function CreateCompanyPage() {
         </form>
       </div>
 
-      <FieldModal
-        onSelect={(field) => setFields((fields) => fields.concat(field))}
-      />
+      <FieldModal onSelect={(fields) => setFields(fields)} />
     </ProtectedPage>
   );
 }
 
-const FieldModal = ({ onSelect }: { onSelect: (field: Field) => void }) => {
+const FieldModal = ({ onSelect }: { onSelect: (fields: Field[]) => void }) => {
   const fields = trpc.useQuery(["field.getAll"]);
   const [opened, setOpened] = useState(false);
-  const [fieldId, setFieldId] = useState("");
+  const [selected, setSelected] = useState<Field[]>([]);
+  const [selectedCategories, setSelectedCategories] = useState<
+    Partial<Record<FieldCategory, boolean>>
+  >({});
 
   useEvent(
     "modal",
@@ -149,17 +186,13 @@ const FieldModal = ({ onSelect }: { onSelect: (field: Field) => void }) => {
     }, [])
   );
 
-  const field = useMemo(() => {
-    return fields.data?.find((field) => field.id === fieldId);
-  }, [fields, fieldId]);
-
   function onConfirm() {
-    if (field == null) {
-      addToast("Selecione uma informação", "error");
+    if (selected.length === 0) {
+      addToast("Selecione ao menos uma informação", "error");
       return;
     }
 
-    onSelect(field);
+    onSelect(selected);
     setOpened(false);
   }
 
@@ -170,38 +203,84 @@ const FieldModal = ({ onSelect }: { onSelect: (field: Field) => void }) => {
         data-open={opened}
         key={String(opened)}
       >
-        <div className="modal-box border border-base-300 w-fit">
-          <h3 className="font-bold text-lg">
-            Escolher Informação de Convidado
-          </h3>
+        <div className="modal-box border border-base-300 md:max-w-4xl">
+          <h3 className="font-bold text-lg">Informações dos Convidados</h3>
 
           <div className="overflow-x-auto">
             <table className="table w-full border border-base-300 table-compact">
+              <thead>
+                <tr>
+                  <th className="w-[10ch]">Escolher</th>
+                  <th>Nome</th>
+                  <th className="w-[10ch]">Tipo</th>
+                  <th>Descrição</th>
+                </tr>
+              </thead>
               <tbody>
                 {fields.data?.map((field, i) => {
-                  return (
-                    <>
-                      <tr key={field.id}>
-                        <td className="w-[56px]">
-                          <input type="checkbox" className="toggle" />
-                        </td>
-                        <td>
-                          <span>{field.name}</span>
-                          <span className="badge badge-info badge-sm ml-2 font-bold">
-                            {field.type}
-                          </span>
-                        </td>
-                        <td>{field.description}</td>
-                      </tr>
+                  const Container =
+                    field.options.length > 0 ? "details" : "div";
 
-                      {field.options?.map((option) => (
-                        <tr key={option.id} className="active text-xs">
-                          <td></td>
-                          <td colSpan={2}>{option.name}</td>
-                          <td>{option.description}</td>
-                        </tr>
-                      ))}
-                    </>
+                  const isDisabled =
+                    selectedCategories[field.category] &&
+                    !selected.includes(field);
+
+                  return (
+                    <tr
+                      key={field.id}
+                      className="align-top"
+                      data-cat={field.category}
+                    >
+                      <th className="text-center">
+                        <input
+                          type="checkbox"
+                          className="toggle"
+                          disabled={isDisabled}
+                          title={
+                            isDisabled
+                              ? `Você já selecionou um campo de ${getCategoryText(
+                                  field.category
+                                )}`
+                              : ""
+                          }
+                          onChange={(e) => {
+                            const isSelected = e.target.checked;
+
+                            setSelected((selected) => {
+                              if (isSelected) {
+                                return selected.concat(field);
+                              }
+
+                              return selected.filter((id) => id !== field);
+                            });
+                            setSelectedCategories((categories) => {
+                              return {
+                                ...categories,
+                                [field.category]: isSelected,
+                              };
+                            });
+                          }}
+                        />
+                      </th>
+                      <td>
+                        <Container>
+                          <summary className="font-bold">{field.name}</summary>
+                          {field.options?.map((option) => (
+                            <ul key={option.id} className="active text-xs">
+                              <li>
+                                {option.name} - {option.description}
+                              </li>
+                            </ul>
+                          ))}
+                        </Container>
+                      </td>
+                      <td>
+                        <span className="badge badge-secondary badge-sm font-bold uppercase">
+                          {getTypeText(field.type)}
+                        </span>
+                      </td>
+                      <td>{field.description}</td>
+                    </tr>
                   );
                 })}
               </tbody>

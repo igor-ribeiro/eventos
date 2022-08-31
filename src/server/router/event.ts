@@ -5,7 +5,7 @@ import { z } from "zod";
 import { createProtectedRouter, createRouter } from "./context";
 
 export const eventPublicRouter = createRouter()
-  .query("getBySlug", {
+  .query("getByLink", {
     input: z.object({
       link: z.string(),
     }),
@@ -14,6 +14,21 @@ export const eventPublicRouter = createRouter()
         where: {
           link: input.link,
         },
+        include: {
+          fields: {
+            include: {
+              field: {
+                include: {
+                  options: {
+                    orderBy: {
+                      sequence: "asc",
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
       });
 
       return event;
@@ -21,19 +36,25 @@ export const eventPublicRouter = createRouter()
   })
   .mutation("confirmGuest", {
     input: z.object({
-      event_id: z.string().cuid(),
-      name: z.string().min(3),
-      age: z.string(),
-      confirmation: z.nativeEnum(GuestConfirmation),
+      eventId: z.string().cuid(),
+      fields: z
+        .object({
+          id: z.string().cuid(),
+          value: z.string().or(z.number()),
+        })
+        .array(),
       action: z.enum(["next", "finalize"]),
     }),
     async resolve({ input, ctx }) {
       await ctx.prisma.guest.create({
         data: {
-          eventId: input.event_id,
-          name: input.name,
-          age: input.age,
-          confirmation: input.confirmation,
+          eventId: input.eventId,
+          fields: {
+            create: input.fields.map((field) => ({
+              fieldId: field.id,
+              value: field.value,
+            })),
+          },
         },
       });
 
@@ -42,6 +63,39 @@ export const eventPublicRouter = createRouter()
   });
 
 export const eventPrivateRouter = createProtectedRouter()
+  .mutation("create", {
+    input: z.object({
+      name: z.string(),
+      link: z.string(),
+      description: z.string(),
+      date: z.date(),
+      confirmationDeadline: z.date(0),
+      fields: z.string().array(),
+    }),
+    async resolve({ ctx, input }) {
+      const { fields, ...data } = input;
+
+      return ctx.prisma.event.create({
+        data: {
+          ...data,
+          users: {
+            connect: {
+              id: ctx.session.user.id,
+            },
+          },
+          fields: {
+            createMany: {
+              data: fields.map((fieldId, i) => ({
+                fieldId,
+                sequence: i + 1,
+              })),
+              skipDuplicates: true,
+            },
+          },
+        },
+      });
+    },
+  })
   .query("getAllByUser", {
     async resolve({ ctx }) {
       return ctx.prisma.event.findMany({

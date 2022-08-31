@@ -10,7 +10,7 @@ export const appRouter = createRouter()
   .transformer(superjson)
   .merge("auth.", authRouter)
   .merge("event.public.", eventPublicRouter)
-  .merge("event.user.", eventPrivateRouter)
+  .merge("event.", eventPrivateRouter)
   .merge("field.", fieldProtectedRouter);
 
 // export type definition of API

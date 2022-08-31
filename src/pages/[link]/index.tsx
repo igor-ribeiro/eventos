@@ -1,11 +1,21 @@
 import { Hero } from "@/components/Hero";
 import { formDataToJson } from "@/utils/formData-to-json";
 import { inferMutationInput, trpc } from "@/utils/trpc";
+import { ssp } from "@common/server/ssp";
 import { GuestConfirmation } from "@prisma/client";
-import { NextPage } from "next";
+import { GetServerSideProps, NextPage } from "next";
 import Head from "next/head";
 import { useRouter } from "next/router";
 import { FormEvent, useEffect, useRef, useState } from "react";
+
+export const getServerSideProps: GetServerSideProps = (ctx) =>
+  ssp(ctx, (ssr) => {
+    return [
+      ssr.fetchQuery("event.public.getByLink", {
+        link: ctx.query.link as string,
+      }),
+    ];
+  });
 
 const EventPage: NextPage = () => {
   const router = useRouter();
@@ -14,30 +24,42 @@ const EventPage: NextPage = () => {
   const [formKey, setFormKey] = useState(0);
 
   const event = trpc.useQuery([
-    "event.public.getBySlug",
+    "event.public.getByLink",
     {
-      link: router.query.slug as string,
+      link: router.query.link as string,
     },
   ]);
 
   const confirmGuest = trpc.useMutation(["event.public.confirmGuest"]);
 
   function onSubmit(e: FormEvent<HTMLFormElement>) {
-    e.persist();
     e.preventDefault();
 
     // @ts-ignore
     const button = e.nativeEvent.submitter as HTMLButtonElement | undefined;
 
-    const data = formDataToJson<
-      inferMutationInput<"event.public.confirmGuest">
-    >(new FormData(e.target as HTMLFormElement));
+    const data = new FormData(e.target as HTMLFormElement);
 
     if (button) {
-      data[button.name as "action"] = button.value as typeof data.action;
+      data.set("action", button.value);
     }
 
-    confirmGuest.mutate(data);
+    const input = {
+      fields: [],
+    } as any as inferMutationInput<"event.public.confirmGuest">;
+
+    for (const key of Array.from(data.keys())) {
+      if (key === "action" || key === "eventId") {
+        input[key as keyof typeof input] = data.get(key) as any;
+      } else {
+        input.fields.push({
+          id: key,
+          value: data.get(key) as string,
+        });
+      }
+    }
+
+    confirmGuest.mutate(input as Required<typeof input>);
   }
 
   const shouldResetForm =
@@ -56,9 +78,9 @@ const EventPage: NextPage = () => {
   useEffect(() => {
     if (redirectToThankYou) {
       router.push({
-        pathname: "/[slug]/obrigado",
+        pathname: "/[link]/obrigado",
         query: {
-          slug: router.query.slug,
+          link: router.query.slug,
         },
       });
     }
@@ -100,31 +122,49 @@ const EventPage: NextPage = () => {
         onSubmit={onSubmit}
         action=""
       >
-        <input type="hidden" name="event_id" value={event.data.id} />
+        <input type="hidden" name="eventId" value={event.data.id} />
 
-        <div className="form-control mb-4">
-          <label className="label font-bold" htmlFor="name">
-            Nome e Sobrenome
-          </label>
-          <input
-            name="name"
-            type="text"
-            className="input input-bordered w-full"
-            autoFocus
-          />
-        </div>
+        {event.data.fields.map(({ id, field }, i) => {
+          if (["TEXT", "NUMBER"].includes(field.type)) {
+            return (
+              <div className="form-control mb-4" key={id}>
+                <label className="label font-bold" htmlFor={field.id}>
+                  {field.name}
+                </label>
+                <input
+                  name={field.id}
+                  type={field.type}
+                  className="input input-bordered w-full"
+                  autoFocus={i === 0}
+                />
+              </div>
+            );
+          }
 
-        <div className="form-control mb-4">
-          <label className="label font-bold" htmlFor="age">
-            Idade
-          </label>
-          <select name="age" className="select select-bordered w-full">
-            <option>Adulto</option>
-            <option>De 5 a 12 anos</option>
-            <option>Menor que 5 anos</option>
-          </select>
-        </div>
+          if (field.type === "OPTION") {
+            return (
+              <div className="form-control mb-4" key={id}>
+                <label className="label font-bold" htmlFor={field.id}>
+                  {field.name}
+                </label>
+                <select
+                  name={field.id}
+                  className="select select-bordered w-full"
+                >
+                  {field.options.map((option) => (
+                    <option key={option.id} value={option.name}>
+                      {option.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            );
+          }
 
+          return null;
+        })}
+
+        {/*
         <div className="form-control mb-4">
           <label className="label font-bold" htmlFor="confirmation">
             Confirmar Presença
@@ -139,16 +179,17 @@ const EventPage: NextPage = () => {
             <option value={GuestConfirmation.NO}>Não</option>
           </select>
         </div>
+        */}
 
         <div className="grid gap-2">
           <button
-            className="btn"
+            className="btn btn"
             type="submit"
             name="action"
             value="next"
             disabled={confirmGuest.isLoading}
           >
-            Próximo Convidado &rarr;
+            Próximo Convidado
           </button>
           <button
             className="btn btn-primary"
