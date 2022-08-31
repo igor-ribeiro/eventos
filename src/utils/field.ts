@@ -14,6 +14,7 @@ const CATEGORIES: Record<FieldCategory, string> = {
   NAME: "nome",
   AGE: "idade",
   EMAIL: "email",
+  CONFIRMATION: "confirmação",
 };
 
 export const getCategoryText = (category: FieldCategory) => {

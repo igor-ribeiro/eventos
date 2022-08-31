@@ -85,9 +85,9 @@ export const eventPrivateRouter = createProtectedRouter()
           },
           fields: {
             createMany: {
-              data: fields.map((fieldId, i) => ({
+              data: fields.map((fieldId, sequence) => ({
                 fieldId,
-                sequence: i + 1,
+                sequence,
               })),
               skipDuplicates: true,
             },
