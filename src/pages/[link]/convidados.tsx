@@ -72,7 +72,7 @@ const ListPage: NextPage = () => {
     },
   ]);
 
-  const removeGuest = trpc.useMutation(["event.user.removeGuest"]);
+  const removeGuest = trpc.useMutation(["event.removeGuest"]);
 
   const [filter, update] = useReducer(filterReducer, INITIAL_FILTER);
 
@@ -124,21 +124,22 @@ const ListPage: NextPage = () => {
   }
 
   function onExportGuestList() {
-    downloadFile(
-      generateCsv(
-        [
-          { name: "name", label: "Nome" },
-          { name: "age", label: "Idade", format: renderAge },
-          {
-            name: "confirmation",
-            label: "Confirmação",
-            format: renderConfirmation,
-          },
-        ],
-        guests
-      ),
-      `convidados-${router.query.slug}.csv`
-    );
+    return;
+    // downloadFile(
+    //   generateCsv(
+    //     [
+    //       { name: "name", label: "Nome" },
+    //       { name: "age", label: "Idade", format: renderAge },
+    //       {
+    //         name: "confirmation",
+    //         label: "Confirmação",
+    //         format: renderConfirmation,
+    //       },
+    //     ],
+    //     guests
+    //   ),
+    //   `convidados-${router.query.slug}.csv`
+    // );
   }
 
   function onClearFilter() {
@@ -146,36 +147,6 @@ const ListPage: NextPage = () => {
     (formRef.current!.name as any as HTMLInputElement).focus();
     update("RESET");
   }
-
-  // @ts-ignore
-  const total = event.data.guests.reduce(
-    // @ts-ignore
-    (total, guest) => {
-      total[guest.confirmation][guest.age] =
-        (total[guest.confirmation][guest.age] || 0) + 1;
-
-      if (guest.age === "BABY") {
-        return total;
-      }
-
-      total[guest.confirmation].total++;
-
-      return total;
-    },
-    {
-      YES: {
-        total: 0,
-      },
-      NO: {
-        total: 0,
-      },
-      MAYBE: {
-        total: 0,
-      },
-    } as Total
-  );
-
-  const totalConfirmed = total.YES.total + total.MAYBE.total;
 
   return (
     <div className="w-content">
@@ -192,44 +163,6 @@ const ListPage: NextPage = () => {
         >
           <DownloadIcon />
         </button>
-      </div>
-
-      <div className="border border-base-300 rounded-md mt-4">
-        <table className="table w-full table-compact m-0">
-          <thead>
-            <tr>
-              <th colSpan={2} className="text-center">
-                Total
-              </th>
-              <th colSpan={3} className="text-center">
-                Idade
-              </th>
-            </tr>
-            <tr>
-              <th className="font-bold">Presença</th>
-              <th className="font-bold">{totalConfirmed}</th>
-              <th className="font-bold">Adulto</th>
-              <th className="font-bold">Criança</th>
-              <th className="font-bold">Bebê</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>Sim</td>
-              <td>{total.YES.total}</td>
-              <td>{total.YES.ADULT}</td>
-              <td>{total.YES.CHILD}</td>
-              <td>{total.YES.BABY}</td>
-            </tr>
-            <tr>
-              <td>Talvez</td>
-              <td>{total.MAYBE.total}</td>
-              <td>{total.MAYBE.ADULT}</td>
-              <td>{total.MAYBE.CHILD}</td>
-              <td>{total.MAYBE.BABY}</td>
-            </tr>
-          </tbody>
-        </table>
       </div>
 
       <div className="border border-base-300 rounded-md overflow-x-auto mt-6">
