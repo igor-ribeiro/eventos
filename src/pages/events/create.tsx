@@ -81,18 +81,24 @@ export default function CreateCompanyPage() {
             value={name}
             onChange={(e) => setName(e.target.value)}
             name="name"
+            autoComplete="off"
           />
 
           <Input
             label="Link"
             value={link}
             onChange={(e) => setLink(e.target.value)}
-            leading={<span>/</span>}
-            helper={link ? origin + "/" + link : ""}
+            helper={origin + "/" + (link ?? "")}
             name="link"
+            autoComplete="off"
           />
 
-          <Input label="Descrição" type="textarea" name="description" />
+          <Input
+            label="Descrição"
+            type="textarea"
+            name="description"
+            autoComplete="off"
+          />
 
           <div className="grid grid-cols-2 gap-4">
             <Input label="Data" type="date" name="date" />
