@@ -25,13 +25,10 @@ export default function CreateCompanyPage() {
   const [name, setName] = useState("");
   const [link, setLink] = useState("");
   const [fields, setFields] = useState<Field[]>([]);
+  const [origin, setOrigin] = useState("");
 
-  const origin = useMemo(() => {
-    if (typeof window === "undefined") {
-      return "/";
-    }
-
-    return window.location.origin;
+  useEffect(() => {
+    setOrigin(window.location.origin);
   }, []);
 
   useEffect(() => {
