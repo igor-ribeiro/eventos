@@ -2,6 +2,11 @@ import { Hero } from "@/components/Hero";
 import { UploadIcon } from "@/components/Icons";
 import { getCategoryText, getTypeText } from "@/utils/field";
 import { trpc } from "@/utils/trpc";
+import {
+  CalendarIcon,
+  IdentificationIcon,
+  ImageIcon,
+} from "@common/components/Icons";
 import { addToast } from "@common/components/Toast";
 import { ssp } from "@common/server/ssp";
 import { Field, FieldCategory, FieldOption } from "@prisma/client";
@@ -87,6 +92,8 @@ const EventPage: NextPage = () => {
   const [image, setImage] = useState<string>();
   const inputRef = useRef<HTMLInputElement>(null);
 
+  const isCreating = true;
+
   useEffect(() => {
     if (status === "unauthenticated") {
       router.push("/auth/signin?callbackUrl=/create");
@@ -109,42 +116,26 @@ const EventPage: NextPage = () => {
     inputRef.current!.click();
   }
 
+  const isInvalid = fields.length === 0 || !image;
+
   return (
     <div>
-      <Hero position="end" image={image}>
-        <Editable name="name" defaultValue="Nome do evento">
-          <h1 className="text-white md:text-5xl mb-4 uppercase" />
-        </Editable>
+      <div className="fixed top-0 left-0 w-full z-10 pt-4 flex items-center justify-center gap-2">
+        <div className="indicator">
+          <span className="indicator-top indicator-center indicator-item badge badge-secondary animate-pulse rounded-full badge-sm"></span>
+          <button className="btn gap-2" title="Configurar datas">
+            <span className="text-xs">Datas</span>
+            <CalendarIcon />
+          </button>
+        </div>
+        <div className="indicator">
+          {fields.length === 0 && (
+            <span className="indicator-top indicator-center indicator-item badge badge-secondary animate-pulse rounded-full badge-sm"></span>
+          )}
 
-        <Editable name="description" defaultValue="Descrição do evento">
-          <p className="mb-4 font-bold text-1md leading-5" />
-        </Editable>
-
-        <input
-          ref={inputRef}
-          onChange={onImportEvent}
-          type="file"
-          accept="image/*"
-          name="file"
-          style={{
-            display: "none",
-          }}
-        />
-
-        <button
-          className="btn btn-circle absolute top-4 left-1/2 translate-x--1/2"
-          onClick={onTriggerImportEvent}
-          title="Importar Evento"
-        >
-          <UploadIcon />
-        </button>
-      </Hero>
-
-      <form className="max-w-[600px] mx-auto p-3" action="">
-        <div className="text-center">
           <button
-            className="btn btn-sm my-4 btn-secondary"
-            type="button"
+            className={`btn gap-2 ${fields.length ? "btn-success" : ""}`}
+            title="Configurar datas"
             onClick={() =>
               dispatchCustomEvent("modal", {
                 id: "select-field-modal",
@@ -155,10 +146,49 @@ const EventPage: NextPage = () => {
               })
             }
           >
-            Escolher informações dos convidados
+            {fields.length === 0 && <span className="text-xs">Convidados</span>}
+            <IdentificationIcon />
           </button>
         </div>
 
+        <div className="indicator">
+          {!image && (
+            <span className="indicator-top indicator-center indicator-item badge badge-secondary animate-pulse rounded-full badge-sm"></span>
+          )}
+
+          <button
+            className={`btn gap-2 ${image ? "btn-success" : ""}`}
+            onClick={onTriggerImportEvent}
+            title="Importar Evento"
+          >
+            {!image && <span className="text-xs">Imagem</span>}
+            <ImageIcon />
+          </button>
+        </div>
+      </div>
+
+      <input
+        ref={inputRef}
+        onChange={onImportEvent}
+        type="file"
+        accept="image/*"
+        name="file"
+        style={{
+          display: "none",
+        }}
+      />
+
+      <Hero position="end" image={image}>
+        <Editable name="name" defaultValue="Nome do evento">
+          <h1 className="text-white md:text-5xl mb-4 uppercase" />
+        </Editable>
+
+        <Editable name="description" defaultValue="Descrição do evento">
+          <p className="mb-4 font-bold text-1md leading-5" />
+        </Editable>
+      </Hero>
+
+      <form className="max-w-[600px] mx-auto p-3" action="">
         {fields.map(({ id, field }, i) => {
           if (["TEXT", "NUMBER"].includes(field.type)) {
             return (
@@ -199,30 +229,34 @@ const EventPage: NextPage = () => {
           return null;
         })}
 
-        <div className="grid gap-2 md:grid-cols-2">
-          <button
-            className="btn btn"
-            type="submit"
-            name="action"
-            value="next"
-            disabled
-          >
-            Próximo Convidado
-          </button>
-          <button
-            className="btn btn-primary"
-            type="submit"
-            name="action"
-            value="finalize"
-            disabled
-          >
-            Finalizar
-          </button>
-        </div>
+        {isCreating ? null : (
+          <div className="grid gap-2 md:grid-cols-2">
+            <button
+              className="btn btn"
+              type="submit"
+              name="action"
+              value="next"
+              disabled
+            >
+              Próximo Convidado
+            </button>
+            <button
+              className="btn btn-primary"
+              type="submit"
+              name="action"
+              value="finalize"
+              disabled
+            >
+              Finalizar
+            </button>
+          </div>
+        )}
 
-        <div className="divider"></div>
-
-        <button className="btn btn-primary btn-block my-4" type="submit">
+        <button
+          className="btn btn-primary btn-block my-4"
+          type="submit"
+          disabled={isInvalid}
+        >
           Criar evento
         </button>
       </form>
