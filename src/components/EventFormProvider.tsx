@@ -86,7 +86,7 @@ function reducer(state: EventFormValue, action: Action) {
   if (action.type === "SET") {
     next.data[action.name] = action.value as any;
 
-    if (action.name === "name" && !state.linkSynced) {
+    if (action.name === "name" && state.linkSynced) {
       next.data.link = getLink(action.value as string);
     }
 
