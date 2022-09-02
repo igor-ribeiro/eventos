@@ -1,9 +1,19 @@
+import {
+  EventFormProvider,
+  useEventFormActions,
+  useEventFormValue,
+} from "@/components/EventFormProvider";
 import { Hero } from "@/components/Hero";
+import { SelectDatesModal } from "@/components/SelectDatesModal";
 import { SelectFieldModal } from "@/components/SelectFieldModal";
+import { SelectLinkModal } from "@/components/SelectLinkModal";
+import { trpc } from "@/utils/trpc";
 import {
   CalendarIcon,
   IdentificationIcon,
   ImageIcon,
+  LinkIcon,
+  SyncIcon,
 } from "@common/components/Icons";
 import { addToast } from "@common/components/Toast";
 import { ssp } from "@common/server/ssp";
@@ -29,6 +39,23 @@ export const getServerSideProps: GetServerSideProps = (ctx) =>
     return Promise.resolve();
   });
 
+const EventPage: NextPage = () => {
+  const router = useRouter();
+  const { status } = useSession();
+
+  useEffect(() => {
+    if (status === "unauthenticated") {
+      router.push("/auth/signin?callbackUrl=/create");
+    }
+  }, [router, status]);
+
+  return (
+    <EventFormProvider>
+      <EventForm />
+    </EventFormProvider>
+  );
+};
+
 type FieldWithOptions = Field & {
   options: FieldOption[];
 };
@@ -38,20 +65,27 @@ type SelectedField = {
   field: FieldWithOptions;
 };
 
-const EventPage: NextPage = () => {
-  const router = useRouter();
-  const { status } = useSession();
-  const [fields, setFields] = useState<SelectedField[]>([]);
-  const [image, setImage] = useState<string>();
+const EventForm = () => {
+  const { data, isValid, linkSynced } = useEventFormValue();
+  const actions = useEventFormActions();
+  const [origin, setOrigin] = useState("");
+
+  useEffect(() => {
+    setOrigin(window.location.origin);
+  }, []);
+
+  const fields = trpc.useQuery([
+    "field.get",
+    {
+      fields: data.fields,
+    },
+  ]);
+
+  // const [fields, setFields] = useState<SelectedField[]>([]);
+  // const [image, setImage] = useState<string>();
   const inputRef = useRef<HTMLInputElement>(null);
 
   const isCreating = true;
-
-  useEffect(() => {
-    if (status === "unauthenticated") {
-      router.push("/auth/signin?callbackUrl=/create");
-    }
-  }, [router, status]);
 
   async function onImageUpload(e: ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -62,31 +96,41 @@ const EventPage: NextPage = () => {
       return;
     }
 
-    setImage(URL.createObjectURL(file));
+    actions.set("imageUrl", URL.createObjectURL(file));
   }
 
   function onTriggerImageUpload() {
     inputRef.current!.click();
   }
 
-  const isInvalid = fields.length === 0 || !image;
-
   return (
-    <div>
-      <div className="fixed top-0 left-0 w-full z-10 pt-4 flex items-center justify-center gap-2">
-        <ToolbarButton label="Datas" onClick={() => void {}}>
+    <>
+      <div className="fixed top-0 left-0 w-full z-10 p-4 flex items-center justify-center gap-2">
+        <ToolbarButton
+          label="Datas"
+          completed={Boolean(data.date) && Boolean(data.confirmationDeadline)}
+          onClick={() =>
+            dispatchCustomEvent("modal", {
+              id: "select-dates-modal",
+              action: "open",
+              data: {
+                fields: data.fields,
+              },
+            })
+          }
+        >
           <CalendarIcon />
         </ToolbarButton>
 
         <ToolbarButton
           label="Convidados"
-          completed={fields.length > 0}
+          completed={data.fields.length > 0}
           onClick={() =>
             dispatchCustomEvent("modal", {
               id: "select-field-modal",
               action: "open",
               data: {
-                fields: fields.map(({ field }) => field),
+                fields: data.fields,
               },
             })
           }
@@ -96,10 +140,26 @@ const EventPage: NextPage = () => {
 
         <ToolbarButton
           label="Imagem"
-          completed={Boolean(image)}
+          completed={Boolean(data.imageUrl)}
           onClick={onTriggerImageUpload}
         >
           <ImageIcon />
+        </ToolbarButton>
+
+        <ToolbarButton
+          label="Link"
+          completed={Boolean(data.link)}
+          onClick={() =>
+            dispatchCustomEvent("modal", {
+              id: "select-link-modal",
+              action: "open",
+              data: {
+                link: data.link,
+              },
+            })
+          }
+        >
+          <LinkIcon />
         </ToolbarButton>
       </div>
 
@@ -114,21 +174,55 @@ const EventPage: NextPage = () => {
         }}
       />
 
-      <Hero position="end" image={image}>
-        <Editable name="name" defaultValue="Nome do evento">
+      <Hero position="end" image={data.imageUrl}>
+        <div className="flex gap-1 justify-center my-2">
+          <button
+            className="btn btn-sm lowercase"
+            onClick={() =>
+              dispatchCustomEvent("modal", {
+                id: "select-link-modal",
+                action: "open",
+                data: {
+                  link: data.link,
+                },
+              })
+            }
+          >
+            <span className="text-xs">/{data.link}</span>
+          </button>
+
+          <button
+            className={`btn btn-circle btn-sm ${
+              linkSynced ? "btn-success" : ""
+            }`}
+            onClick={() => actions.syncLink()}
+          >
+            <SyncIcon size={14} />
+          </button>
+        </div>
+
+        <Editable
+          name="name"
+          value={data.name}
+          onChange={(value) => actions.set("name", value)}
+        >
           <h1 className="text-white md:text-5xl mb-4 uppercase" />
         </Editable>
 
-        <Editable name="description" defaultValue="Descrição do evento">
+        <Editable
+          name="description"
+          value="Descrição do evento"
+          onChange={(value) => actions.set("description", value)}
+        >
           <p className="mb-4 font-bold text-1md leading-5" />
         </Editable>
       </Hero>
 
       <form className="max-w-[600px] mx-auto p-3" action="">
-        {fields.map(({ id, field }, i) => {
+        {fields.data?.map((field, i) => {
           if (["TEXT", "NUMBER"].includes(field.type)) {
             return (
-              <div className="form-control mb-4" key={id}>
+              <div className="form-control mb-4" key={field.id}>
                 <label className="label font-bold" htmlFor={field.id}>
                   {field.name}
                 </label>
@@ -136,7 +230,7 @@ const EventPage: NextPage = () => {
                   name={field.id}
                   type={field.type}
                   className="input input-bordered w-full"
-                  autoFocus={i === 0}
+                  autoFocus={i === 0 && !isCreating}
                 />
               </div>
             );
@@ -144,7 +238,7 @@ const EventPage: NextPage = () => {
 
           if (field.type === "OPTION") {
             return (
-              <div className="form-control mb-4" key={id}>
+              <div className="form-control mb-4" key={field.id}>
                 <label className="label font-bold" htmlFor={field.id}>
                   {field.name}
                 </label>
@@ -191,23 +285,21 @@ const EventPage: NextPage = () => {
         <button
           className="btn btn-primary btn-block my-4"
           type="submit"
-          disabled={isInvalid}
+          disabled={!isValid}
         >
           Criar evento
         </button>
       </form>
 
-      <SelectFieldModal
-        onSelect={(fields) =>
-          setFields(
-            fields.map((field) => ({
-              id: crypto.randomUUID(),
-              field,
-            }))
-          )
-        }
+      <SelectFieldModal onSelect={(fields) => actions.set("fields", fields)} />
+      <SelectLinkModal onConfirm={(link) => actions.set("link", link)} />
+      <SelectDatesModal
+        onConfirm={(dates) => {
+          actions.set("date", dates.date);
+          actions.set("confirmationDeadline", dates.confirmationDeadline);
+        }}
       />
-    </div>
+    </>
   );
 };
 
@@ -224,17 +316,19 @@ const ToolbarButton = ({
   return (
     <div className="indicator">
       {!completed && (
-        <span className="indicator-top indicator-center indicator-item badge badge-secondary animate-pulse rounded-full badge-sm"></span>
+        <span className="indicator-center indicator-item badge badge-secondary animate-pulse rounded-full badge-xs"></span>
       )}
 
       <button
-        className={`btn gap-2 ${completed ? "btn-success" : "animate-pulse"}`}
+        className={`btn  flex-col ${
+          completed ? "btn-success" : "animate-pulse"
+        }`}
         onClick={onClick}
         title={label}
       >
         <>
-          {!completed && <span className="text-xs">{label}</span>}
           {children}
+          <span className="text-xs md:inline-block">{label}</span>
         </>
       </button>
     </div>
@@ -244,18 +338,28 @@ const ToolbarButton = ({
 const Editable = ({
   children,
   name,
-  defaultValue,
+  value,
+  onChange = () => void {},
 }: {
   children: ReactElement;
   name: string;
-  defaultValue: string;
+  value: string;
+  onChange?: (value: string) => void;
 }) => {
-  const [value, setValue] = useState(defaultValue);
+  const internal = useRef(value);
   const { status } = useSession();
 
   const ref = useRef<HTMLElement>(null);
 
   const loggedIn = status === "authenticated";
+
+  useEffect(() => {
+    if (!ref.current || !internal.current) {
+      return;
+    }
+
+    ref.current.textContent = internal.current;
+  }, []);
 
   return (
     <>
@@ -264,7 +368,7 @@ const Editable = ({
           ref,
           contentEditable: loggedIn,
           dangerouslySetInnerHTML: {
-            __html: defaultValue,
+            __html: "",
           },
           onFocus(e: MouseEvent) {
             requestAnimationFrame(() => {
@@ -278,7 +382,9 @@ const Editable = ({
             });
           },
           onInput(e: FormEvent<HTMLElement>) {
-            setValue((e.target as HTMLElement).textContent ?? "");
+            const value = (e.target as HTMLElement).textContent ?? "";
+
+            onChange(value);
           },
           onPaste(e: ClipboardEvent<HTMLElement>) {
             e.preventDefault();
@@ -287,7 +393,7 @@ const Editable = ({
 
             target.textContent = value;
 
-            setValue(value);
+            onChange(value);
           },
         })}
       </div>

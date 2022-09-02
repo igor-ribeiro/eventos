@@ -15,7 +15,7 @@ import { useRouter } from "next/router";
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 
 export const getServerSideProps: GetServerSideProps = (ctx) => {
-  return ssp(ctx, (ssr) => [ssr.prefetchQuery("field.getAll")]);
+  return ssp(ctx, (ssr) => [ssr.prefetchQuery("field.get")]);
 };
 
 export default function CreateCompanyPage() {
@@ -184,7 +184,7 @@ export default function CreateCompanyPage() {
 }
 
 const FieldModal = ({ onSelect }: { onSelect: (fields: Field[]) => void }) => {
-  const fields = trpc.useQuery(["field.getAll"]);
+  const fields = trpc.useQuery(["field.get"]);
   const [opened, setOpened] = useState(false);
   const [selected, setSelected] = useState<Field[]>([]);
   const [selectedCategories, setSelectedCategories] = useState<

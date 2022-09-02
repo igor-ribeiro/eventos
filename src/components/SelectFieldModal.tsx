@@ -3,7 +3,7 @@ import { trpc } from "@/utils/trpc";
 import { addToast } from "@common/components/Toast";
 import { Field, FieldCategory, FieldOption } from "@prisma/client";
 import { useEvent } from "@ribeirolabs/events/react";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 
 type FieldWithOptions = Field & {
   options: FieldOption[];
@@ -12,14 +12,19 @@ type FieldWithOptions = Field & {
 export const SelectFieldModal = ({
   onSelect,
 }: {
-  onSelect: (fields: FieldWithOptions[]) => void;
+  onSelect: (fields: string[]) => void;
 }) => {
-  const fields = trpc.useQuery(["field.getAll"]);
+  const fields = trpc.useQuery(["field.get"]);
   const [opened, setOpened] = useState(false);
-  const [selected, setSelected] = useState<FieldWithOptions[]>([]);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [selectedCategories, setSelectedCategories] = useState<
     Partial<Record<FieldCategory, boolean>>
   >({});
+
+  const selected = useMemo(
+    () => fields.data?.filter((field) => selectedIds.includes(field.id)),
+    [selectedIds, fields.data]
+  );
 
   useEvent(
     "modal",
@@ -33,18 +38,18 @@ export const SelectFieldModal = ({
       setOpened(isOpen);
 
       if (isOpen) {
-        setSelected((e.detail.data as { fields: FieldWithOptions[] }).fields);
+        setSelectedIds((e.detail.data as { fields: string[] }).fields);
       }
     }, [])
   );
 
   function onConfirm() {
-    if (selected.length === 0) {
+    if (selectedIds.length === 0) {
       addToast("Selecione ao menos uma informação", "error");
       return;
     }
 
-    onSelect(selected);
+    onSelect(selectedIds);
     setOpened(false);
   }
 
@@ -67,9 +72,10 @@ export const SelectFieldModal = ({
               {fields.data?.map((field, i) => {
                 const Container = field.options.length > 0 ? "details" : "div";
 
+                const isSelected = selectedIds.includes(field.id);
+
                 const isDisabled =
-                  selectedCategories[field.category] &&
-                  !selected.includes(field);
+                  selectedCategories[field.category] && !isSelected;
 
                 return (
                   <tr
@@ -82,7 +88,7 @@ export const SelectFieldModal = ({
                         type="checkbox"
                         className="toggle"
                         disabled={isDisabled}
-                        checked={selected.includes(field)}
+                        checked={isSelected}
                         title={
                           isDisabled
                             ? `Você já selecionou um campo de ${getCategoryText(
@@ -93,12 +99,12 @@ export const SelectFieldModal = ({
                         onChange={(e) => {
                           const isSelected = e.target.checked;
 
-                          setSelected((selected) => {
+                          setSelectedIds((selected) => {
                             if (isSelected) {
-                              return selected.concat(field);
+                              return selected.concat(field.id);
                             }
 
-                            return selected.filter((id) => id !== field);
+                            return selected.filter((id) => id !== field.id);
                           });
                           setSelectedCategories((categories) => {
                             return {

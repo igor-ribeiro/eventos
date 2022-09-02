@@ -1,12 +1,22 @@
-import { Event, Guest, GuestConfirmation, Prisma, User } from "@prisma/client";
-import { TRPCError } from "@trpc/server";
 import { z } from "zod";
-import { createProtectedRouter, createRouter } from "./context";
+import { createProtectedRouter } from "./context";
 
-export const fieldProtectedRouter = createProtectedRouter().query("getAll", {
-  async resolve({ ctx }) {
+export const fieldProtectedRouter = createProtectedRouter().query("get", {
+  input: z
+    .object({
+      fields: z.string().array(),
+    })
+    .nullish(),
+  async resolve({ ctx, input }) {
     return ctx.prisma.field.findMany({
       where: {
+        ...(input
+          ? {
+              id: {
+                in: input.fields,
+              },
+            }
+          : {}),
         OR: [
           {
             visibility: "PUBLIC",
