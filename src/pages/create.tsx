@@ -1,7 +1,5 @@
 import { Hero } from "@/components/Hero";
-import { UploadIcon } from "@/components/Icons";
-import { getCategoryText, getTypeText } from "@/utils/field";
-import { trpc } from "@/utils/trpc";
+import { SelectFieldModal } from "@/components/SelectFieldModal";
 import {
   CalendarIcon,
   IdentificationIcon,
@@ -9,9 +7,8 @@ import {
 } from "@common/components/Icons";
 import { addToast } from "@common/components/Toast";
 import { ssp } from "@common/server/ssp";
-import { Field, FieldCategory, FieldOption } from "@prisma/client";
+import { Field, FieldOption } from "@prisma/client";
 import { dispatchCustomEvent } from "@ribeirolabs/events";
-import { useEvent } from "@ribeirolabs/events/react";
 import { GetServerSideProps, NextPage } from "next";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/router";
@@ -20,8 +17,8 @@ import {
   ClipboardEvent,
   cloneElement,
   FormEvent,
+  PropsWithChildren,
   ReactElement,
-  useCallback,
   useEffect,
   useRef,
   useState,
@@ -41,50 +38,6 @@ type SelectedField = {
   field: FieldWithOptions;
 };
 
-const Editable = ({
-  children,
-  name,
-  defaultValue,
-}: {
-  children: ReactElement;
-  name: string;
-  defaultValue: string;
-}) => {
-  const [value, setValue] = useState(defaultValue);
-  const { status } = useSession();
-
-  const ref = useRef<HTMLElement>(null);
-
-  const loggedIn = status === "authenticated";
-
-  return (
-    <>
-      <div className={`${loggedIn ? "editable" : ""} block`}>
-        {cloneElement(children, {
-          ref,
-          contentEditable: loggedIn,
-          dangerouslySetInnerHTML: {
-            __html: defaultValue,
-          },
-          onInput: (e: FormEvent<HTMLElement>) => {
-            setValue((e.target as HTMLElement).textContent ?? "");
-          },
-          onPaste: (e: ClipboardEvent<HTMLElement>) => {
-            e.preventDefault();
-            const value = e.clipboardData.getData("text/plain");
-            const target = e.target as HTMLElement;
-
-            target.textContent = value;
-
-            setValue(value);
-          },
-        })}
-      </div>
-      <input type="hidden" name={name} value={value} />
-    </>
-  );
-};
-
 const EventPage: NextPage = () => {
   const router = useRouter();
   const { status } = useSession();
@@ -100,7 +53,7 @@ const EventPage: NextPage = () => {
     }
   }, [router, status]);
 
-  async function onImportEvent(e: ChangeEvent<HTMLInputElement>) {
+  async function onImageUpload(e: ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
 
     if (!file) {
@@ -112,7 +65,7 @@ const EventPage: NextPage = () => {
     setImage(URL.createObjectURL(file));
   }
 
-  function onTriggerImportEvent() {
+  function onTriggerImageUpload() {
     inputRef.current!.click();
   }
 
@@ -121,55 +74,38 @@ const EventPage: NextPage = () => {
   return (
     <div>
       <div className="fixed top-0 left-0 w-full z-10 pt-4 flex items-center justify-center gap-2">
-        <div className="indicator">
-          <span className="indicator-top indicator-center indicator-item badge badge-secondary animate-pulse rounded-full badge-sm"></span>
-          <button className="btn gap-2" title="Configurar datas">
-            <span className="text-xs">Datas</span>
-            <CalendarIcon />
-          </button>
-        </div>
-        <div className="indicator">
-          {fields.length === 0 && (
-            <span className="indicator-top indicator-center indicator-item badge badge-secondary animate-pulse rounded-full badge-sm"></span>
-          )}
+        <ToolbarButton label="Datas" onClick={() => void {}}>
+          <CalendarIcon />
+        </ToolbarButton>
 
-          <button
-            className={`btn gap-2 ${fields.length ? "btn-success" : ""}`}
-            title="Configurar datas"
-            onClick={() =>
-              dispatchCustomEvent("modal", {
-                id: "select-field-modal",
-                action: "open",
-                data: {
-                  fields: fields.map(({ field }) => field),
-                },
-              })
-            }
-          >
-            {fields.length === 0 && <span className="text-xs">Convidados</span>}
-            <IdentificationIcon />
-          </button>
-        </div>
+        <ToolbarButton
+          label="Convidados"
+          completed={fields.length > 0}
+          onClick={() =>
+            dispatchCustomEvent("modal", {
+              id: "select-field-modal",
+              action: "open",
+              data: {
+                fields: fields.map(({ field }) => field),
+              },
+            })
+          }
+        >
+          <IdentificationIcon />
+        </ToolbarButton>
 
-        <div className="indicator">
-          {!image && (
-            <span className="indicator-top indicator-center indicator-item badge badge-secondary animate-pulse rounded-full badge-sm"></span>
-          )}
-
-          <button
-            className={`btn gap-2 ${image ? "btn-success" : ""}`}
-            onClick={onTriggerImportEvent}
-            title="Importar Evento"
-          >
-            {!image && <span className="text-xs">Imagem</span>}
-            <ImageIcon />
-          </button>
-        </div>
+        <ToolbarButton
+          label="Imagem"
+          completed={Boolean(image)}
+          onClick={onTriggerImageUpload}
+        >
+          <ImageIcon />
+        </ToolbarButton>
       </div>
 
       <input
         ref={inputRef}
-        onChange={onImportEvent}
+        onChange={onImageUpload}
         type="file"
         accept="image/*"
         name="file"
@@ -261,7 +197,7 @@ const EventPage: NextPage = () => {
         </button>
       </form>
 
-      <FieldModal
+      <SelectFieldModal
         onSelect={(fields) =>
           setFields(
             fields.map((field) => ({
@@ -275,142 +211,89 @@ const EventPage: NextPage = () => {
   );
 };
 
-export default EventPage;
-
-const FieldModal = ({
-  onSelect,
-}: {
-  onSelect: (fields: FieldWithOptions[]) => void;
-}) => {
-  const fields = trpc.useQuery(["field.getAll"]);
-  const [opened, setOpened] = useState(false);
-  const [selected, setSelected] = useState<FieldWithOptions[]>([]);
-  const [selectedCategories, setSelectedCategories] = useState<
-    Partial<Record<FieldCategory, boolean>>
-  >({});
-
-  useEvent(
-    "modal",
-    useCallback((e) => {
-      if (e.detail.id !== "select-field-modal") {
-        return;
-      }
-
-      const isOpen = e.detail.action === "open";
-
-      setOpened(isOpen);
-
-      if (isOpen) {
-        setSelected((e.detail.data as { fields: FieldWithOptions[] }).fields);
-      }
-    }, [])
-  );
-
-  function onConfirm() {
-    if (selected.length === 0) {
-      addToast("Selecione ao menos uma informação", "error");
-      return;
-    }
-
-    onSelect(selected);
-    setOpened(false);
-  }
-
+const ToolbarButton = ({
+  label,
+  onClick,
+  completed,
+  children,
+}: PropsWithChildren<{
+  label: string;
+  onClick: () => void;
+  completed?: boolean;
+}>) => {
   return (
-    <div className="modal modal-bottom sm:modal-middle" data-open={opened}>
-      <div className="modal-box border border-base-300 md:max-w-4xl">
-        <h3 className="font-bold text-lg">Informações dos Convidados</h3>
+    <div className="indicator">
+      {!completed && (
+        <span className="indicator-top indicator-center indicator-item badge badge-secondary animate-pulse rounded-full badge-sm"></span>
+      )}
 
-        <div className="overflow-x-auto">
-          <table className="table w-full border border-base-300 table-compact">
-            <thead>
-              <tr>
-                <th className="w-[10ch]">Escolher</th>
-                <th>Nome</th>
-                <th className="w-[10ch]">Tipo</th>
-                <th>Descrição</th>
-              </tr>
-            </thead>
-            <tbody>
-              {fields.data?.map((field, i) => {
-                const Container = field.options.length > 0 ? "details" : "div";
-
-                const isDisabled =
-                  selectedCategories[field.category] &&
-                  !selected.includes(field);
-
-                return (
-                  <tr
-                    key={field.id}
-                    className="align-top"
-                    data-cat={field.category}
-                  >
-                    <th className="text-center">
-                      <input
-                        type="checkbox"
-                        className="toggle"
-                        disabled={isDisabled}
-                        checked={selected.includes(field)}
-                        title={
-                          isDisabled
-                            ? `Você já selecionou um campo de ${getCategoryText(
-                                field.category
-                              )}`
-                            : ""
-                        }
-                        onChange={(e) => {
-                          const isSelected = e.target.checked;
-
-                          setSelected((selected) => {
-                            if (isSelected) {
-                              return selected.concat(field);
-                            }
-
-                            return selected.filter((id) => id !== field);
-                          });
-                          setSelectedCategories((categories) => {
-                            return {
-                              ...categories,
-                              [field.category]: isSelected,
-                            };
-                          });
-                        }}
-                      />
-                    </th>
-                    <td>
-                      <Container>
-                        <summary className="font-bold">{field.name}</summary>
-                        {field.options?.map((option) => (
-                          <ul key={option.id} className="active text-xs">
-                            <li>
-                              {option.name} - {option.description}
-                            </li>
-                          </ul>
-                        ))}
-                      </Container>
-                    </td>
-                    <td>
-                      <span className="badge badge-secondary badge-sm font-bold uppercase">
-                        {getTypeText(field.type)}
-                      </span>
-                    </td>
-                    <td>{field.description}</td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-
-        <div className="modal-action">
-          <button className="btn btn-ghost" onClick={() => setOpened(false)}>
-            Cancelar
-          </button>
-          <button className="btn" onClick={onConfirm}>
-            Confirmar
-          </button>
-        </div>
-      </div>
+      <button
+        className={`btn gap-2 ${completed ? "btn-success" : "animate-pulse"}`}
+        onClick={onClick}
+        title={label}
+      >
+        <>
+          {!completed && <span className="text-xs">{label}</span>}
+          {children}
+        </>
+      </button>
     </div>
   );
 };
+
+const Editable = ({
+  children,
+  name,
+  defaultValue,
+}: {
+  children: ReactElement;
+  name: string;
+  defaultValue: string;
+}) => {
+  const [value, setValue] = useState(defaultValue);
+  const { status } = useSession();
+
+  const ref = useRef<HTMLElement>(null);
+
+  const loggedIn = status === "authenticated";
+
+  return (
+    <>
+      <div className={`${loggedIn ? "editable" : ""} block`}>
+        {cloneElement(children, {
+          ref,
+          contentEditable: loggedIn,
+          dangerouslySetInnerHTML: {
+            __html: defaultValue,
+          },
+          onFocus(e: MouseEvent) {
+            requestAnimationFrame(() => {
+              if (window.getSelection && document.createRange) {
+                const range = document.createRange();
+                range.selectNodeContents(e.target as HTMLElement);
+                const selection = window.getSelection();
+                selection?.removeAllRanges();
+                selection?.addRange(range);
+              }
+            });
+          },
+          onInput(e: FormEvent<HTMLElement>) {
+            setValue((e.target as HTMLElement).textContent ?? "");
+          },
+          onPaste(e: ClipboardEvent<HTMLElement>) {
+            e.preventDefault();
+            const value = e.clipboardData.getData("text/plain");
+            const target = e.target as HTMLElement;
+
+            target.textContent = value;
+
+            setValue(value);
+          },
+        })}
+      </div>
+      <input type="hidden" name={name} value={value} />
+    </>
+  );
+};
+
+export default EventPage;
