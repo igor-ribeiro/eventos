@@ -17,7 +17,6 @@ import {
 } from "@common/components/Icons";
 import { addToast } from "@common/components/Toast";
 import { ssp } from "@common/server/ssp";
-import { Field, FieldOption } from "@prisma/client";
 import { dispatchCustomEvent } from "@ribeirolabs/events";
 import { GetServerSideProps, NextPage } from "next";
 import { useSession } from "next-auth/react";
@@ -31,7 +30,6 @@ import {
   ReactElement,
   useEffect,
   useRef,
-  useState,
 } from "react";
 
 export const getServerSideProps: GetServerSideProps = (ctx) =>
@@ -56,23 +54,9 @@ const EventPage: NextPage = () => {
   );
 };
 
-type FieldWithOptions = Field & {
-  options: FieldOption[];
-};
-
-type SelectedField = {
-  id: string;
-  field: FieldWithOptions;
-};
-
 const EventForm = () => {
   const { data, isValid, linkSynced } = useEventFormValue();
   const actions = useEventFormActions();
-  const [origin, setOrigin] = useState("");
-
-  useEffect(() => {
-    setOrigin(window.location.origin);
-  }, []);
 
   const fields = trpc.useQuery([
     "field.get",
@@ -81,8 +65,6 @@ const EventForm = () => {
     },
   ]);
 
-  // const [fields, setFields] = useState<SelectedField[]>([]);
-  // const [image, setImage] = useState<string>();
   const inputRef = useRef<HTMLInputElement>(null);
 
   const isCreating = true;
