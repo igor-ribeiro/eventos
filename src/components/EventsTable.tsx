@@ -3,6 +3,7 @@ import { AddIcon, DeleteIcon, ShareIcon } from "@common/components/Icons";
 import { addToast } from "@common/components/Toast";
 import { copyToClipboard } from "@common/utils/clipboard";
 import Link from "next/link";
+import { EventIcon } from "./Icons";
 
 export const EventsTable = () => {
   const events = trpc.useQuery(["event.getAllByUser"]);
@@ -64,6 +65,12 @@ export const EventsTable = () => {
                       >
                         <ShareIcon />
                       </button>
+
+                      <Link href={`/${event.link}`}>
+                        <a className="btn btn-action">
+                          <EventIcon />
+                        </a>
+                      </Link>
 
                       <button
                         className="btn btn-action"
