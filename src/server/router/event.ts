@@ -1,8 +1,10 @@
 // @ts-nocheck
 import { Event, Guest, GuestConfirmation, Prisma, User } from "@prisma/client";
 import { TRPCError } from "@trpc/server";
+import { basename } from "path";
 import { z } from "zod";
 import { createEventInput } from "../inputs/event";
+import { storage } from "../storage";
 import { createProtectedRouter, createRouter } from "./context";
 
 export const eventPublicRouter = createRouter()
@@ -95,6 +97,23 @@ export const eventPrivateRouter = createProtectedRouter()
       id: z.string().cuid(),
     }),
     async resolve({ ctx, input }) {
+      const { imageUrl } = await ctx.prisma.event.findFirst({
+        where: {
+          id: input.id,
+        },
+        select: {
+          imageUrl: true,
+        },
+      });
+
+      const filename = decodeURIComponent(basename(new URL(imageUrl).pathname));
+
+      try {
+        await storage.bucket("ribeirolabs-events").file(filename).delete();
+      } catch (e) {
+        console.log(`Error deleting file "${filename}": ${e}`);
+      }
+
       return ctx.prisma.event.delete({
         where: {
           id: input.id,

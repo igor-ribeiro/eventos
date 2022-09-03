@@ -4,6 +4,8 @@ import { unstable_getServerSession as getServerSession } from "next-auth";
 import formidable from "formidable";
 import FormData from "form-data";
 import { createReadStream } from "fs";
+import { randomUUID } from "crypto";
+import { storage } from "@/server/storage";
 
 export const config = {
   api: {
@@ -35,18 +37,19 @@ export default async function uploadImage(
     });
   });
 
+  const [_name, ext] = file.originalFilename!.split(".");
+
   const data = new FormData();
 
   data.append("action", "upload");
   data.append("key", "6d207e02198a847aa98d0a2a901485a5");
   data.append("source", createReadStream(file.filepath));
 
-  const response = await (
-    await fetch("https://freeimage.host/api/1/upload", {
-      method: "post",
-      body: data as any,
-    })
-  ).json();
+  const [uploaded] = await storage
+    .bucket("ribeirolabs-events")
+    .upload(file.filepath, {
+      destination: `images/${file.newFilename}.${ext}`,
+    });
 
-  res.send({ url: response.image.display_url });
+  res.send({ url: uploaded.metadata.mediaLink });
 }

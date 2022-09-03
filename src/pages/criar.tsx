@@ -32,6 +32,7 @@ import {
   ReactElement,
   useEffect,
   useRef,
+  useState,
 } from "react";
 
 export const getServerSideProps: GetServerSideProps = (ctx) =>
@@ -59,8 +60,10 @@ const EventPage: NextPage = () => {
 };
 
 const EventForm = () => {
+  const router = useRouter();
   const { data, isValid, linkSynced } = useEventFormValue();
   const actions = useEventFormActions();
+  const [uploading, setUploading] = useState(false);
 
   const fields = trpc.useQuery([
     "field.get",
@@ -99,12 +102,17 @@ const EventForm = () => {
     uploadData.append("file", file);
 
     try {
+      setUploading(true);
+
       const response = await (
         await fetch("/api/upload-image", {
           method: "post",
           body: uploadData,
         })
       ).json();
+
+      URL.revokeObjectURL(data.imageUrl);
+
       try {
         const event = await create.mutateAsync({
           ...data,
@@ -116,6 +124,10 @@ const EventForm = () => {
         });
 
         addToast(`Evento "${event.name}" criado`, "success");
+
+        actions.reset();
+
+        router.push(`/${event.link}`);
       } catch (e: any) {
         console.error(e);
         addToast(
@@ -128,12 +140,22 @@ const EventForm = () => {
       addToast("Não foi possível usar essa imagem: " + e.message, "error");
 
       return;
+    } finally {
+      setUploading(false);
     }
   }
 
   return (
     <div className="relative -m-4">
       <div className="absolute top-0 left-0 w-full z-10 p-4 flex items-center justify-center gap-2">
+        <ToolbarButton
+          label="Imagem"
+          completed={Boolean(data.imageUrl)}
+          onClick={onTriggerImageUpload}
+        >
+          <ImageIcon />
+        </ToolbarButton>
+
         <ToolbarButton
           label="Datas"
           completed={Boolean(data.date) && Boolean(data.confirmationDeadline)}
@@ -164,14 +186,6 @@ const EventForm = () => {
           }
         >
           <IdentificationIcon />
-        </ToolbarButton>
-
-        <ToolbarButton
-          label="Imagem"
-          completed={Boolean(data.imageUrl)}
-          onClick={onTriggerImageUpload}
-        >
-          <ImageIcon />
         </ToolbarButton>
 
         <ToolbarButton
@@ -312,8 +326,8 @@ const EventForm = () => {
 
         <button
           className="btn btn-primary btn-block my-4"
-          disabled={!isValid}
-          data-loading={create.isLoading}
+          // disabled={!isValid}
+          data-loading={create.isLoading || uploading}
           onClick={onCreate}
         >
           Criar evento
