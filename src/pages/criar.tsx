@@ -7,6 +7,7 @@ import { Hero } from "@/components/Hero";
 import { SelectDatesModal } from "@/components/SelectDatesModal";
 import { SelectFieldModal } from "@/components/SelectFieldModal";
 import { SelectLinkModal } from "@/components/SelectLinkModal";
+import { fillDateTime } from "@/utils/date";
 import { trpc } from "@/utils/trpc";
 import {
   CalendarIcon,
@@ -15,6 +16,7 @@ import {
   LinkIcon,
   SyncIcon,
 } from "@common/components/Icons";
+import { ProtectedPage } from "@common/components/ProtectedPage";
 import { addToast } from "@common/components/Toast";
 import { ssp } from "@common/server/ssp";
 import { dispatchCustomEvent } from "@ribeirolabs/events";
@@ -43,14 +45,16 @@ const EventPage: NextPage = () => {
 
   useEffect(() => {
     if (status === "unauthenticated") {
-      router.push("/auth/signin?callbackUrl=/create");
+      router.push("/auth/signin?callbackUrl=/criar");
     }
   }, [router, status]);
 
   return (
-    <EventFormProvider>
-      <EventForm />
-    </EventFormProvider>
+    <ProtectedPage>
+      <EventFormProvider>
+        <EventForm />
+      </EventFormProvider>
+    </ProtectedPage>
   );
 };
 
@@ -65,6 +69,8 @@ const EventForm = () => {
     },
   ]);
 
+  const create = trpc.useMutation("event.create");
+
   const inputRef = useRef<HTMLInputElement>(null);
 
   const isCreating = true;
@@ -78,6 +84,7 @@ const EventForm = () => {
       return;
     }
 
+    URL.revokeObjectURL(data.imageUrl);
     actions.set("imageUrl", URL.createObjectURL(file));
   }
 
@@ -85,9 +92,39 @@ const EventForm = () => {
     inputRef.current!.click();
   }
 
+  async function onCreate() {
+    const file = inputRef.current!.files![0]!;
+
+    const uploadData = new FormData();
+    uploadData.append("file", file);
+
+    try {
+      const response = await (
+        await fetch("/api/upload-image", {
+          method: "post",
+          body: uploadData,
+        })
+      ).json();
+
+      const event = await create.mutateAsync({
+        ...data,
+        imageUrl: response.url,
+        date: fillDateTime(data.date as any as string),
+        confirmationDeadline: fillDateTime(
+          data.confirmationDeadline as any as string
+        ),
+      });
+
+      addToast(`Evento "${event.name}" criado`, "success");
+    } catch (e) {
+      console.error(e);
+      addToast("Não foi possível criar o evento, tente novamente", "error");
+    }
+  }
+
   return (
-    <>
-      <div className="fixed top-0 left-0 w-full z-10 p-4 flex items-center justify-center gap-2">
+    <div className="relative -m-4">
+      <div className="absolute top-0 left-0 w-full z-10 p-4 flex items-center justify-center gap-2">
         <ToolbarButton
           label="Datas"
           completed={Boolean(data.date) && Boolean(data.confirmationDeadline)}
@@ -200,7 +237,7 @@ const EventForm = () => {
         </Editable>
       </Hero>
 
-      <form className="max-w-[600px] mx-auto p-3" action="">
+      <div className="max-w- mx-auto p-3">
         {fields.data?.map((field, i) => {
           if (["TEXT", "NUMBER"].includes(field.type)) {
             return (
@@ -266,12 +303,13 @@ const EventForm = () => {
 
         <button
           className="btn btn-primary btn-block my-4"
-          type="submit"
-          disabled={!isValid}
+          // disabled={!isValid}
+          data-loading={create.isLoading}
+          onClick={onCreate}
         >
           Criar evento
         </button>
-      </form>
+      </div>
 
       <SelectFieldModal onSelect={(fields) => actions.set("fields", fields)} />
       <SelectLinkModal onConfirm={(link) => actions.set("link", link)} />
@@ -281,7 +319,7 @@ const EventForm = () => {
           actions.set("confirmationDeadline", dates.confirmationDeadline);
         }}
       />
-    </>
+    </div>
   );
 };
 

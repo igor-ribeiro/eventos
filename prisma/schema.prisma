@@ -152,15 +152,8 @@ model FieldsOnGuests {
   guestId String
 }
 
-enum GuestConfirmation {
-  YES
-  NO
-  MAYBE
-}
-
 model Guest {
-  id           String            @id @default(cuid())
-  confirmation GuestConfirmation @default(YES)
+  id String @id @default(cuid())
 
   event   Event  @relation(fields: [eventId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   eventId String

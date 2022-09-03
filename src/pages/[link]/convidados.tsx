@@ -1,20 +1,13 @@
-import { downloadFile, generateCsv } from "@/utils/export";
+import { downloadFile } from "@/utils/export";
 import { trpc } from "@/utils/trpc";
-import { GuestConfirmation } from "@prisma/client";
 import { GetServerSideProps, NextPage } from "next";
 import Head from "next/head";
 import { useRouter } from "next/router";
 import { ChangeEvent, useReducer, useRef } from "react";
-import removeAccents from "remove-accents";
 import { ClearIcon, DownloadIcon } from "@/components/Icons";
 import { ProtectedPage } from "@common/components/ProtectedPage";
 import { ssp } from "@common/server/ssp";
 import { DeleteIcon } from "@common/components/Icons";
-
-type Total = Record<
-  GuestConfirmation,
-  Record<string, number> & { total: number }
->;
 
 type Filter = {
   name: string;
@@ -156,13 +149,6 @@ const ListPage: NextPage = () => {
 
       <div className="flex justify-between">
         <h1 className="mb-0 uppercase">{event.data.name}</h1>
-        <button
-          className="btn btn-primary"
-          title="Exportar Evento"
-          onClick={onExportEvent}
-        >
-          <DownloadIcon />
-        </button>
       </div>
 
       <div className="border border-base-300 rounded-md overflow-x-auto mt-6">
@@ -267,25 +253,5 @@ const ListPage: NextPage = () => {
     </div>
   );
 };
-
-const AGE_TEXT: Record<string, string> = {
-  BABY: "Menores de 5 anos",
-  CHILD: "De 5 a 12 anos",
-  ADULT: "Adulto",
-};
-
-function renderAge(age: string): string {
-  return AGE_TEXT[age]!;
-}
-
-const CONFIRMATION_TEXT: Record<GuestConfirmation, string> = {
-  YES: "Sim",
-  NO: "Não",
-  MAYBE: "Talvez",
-};
-
-function renderConfirmation(confirmation: GuestConfirmation): string {
-  return CONFIRMATION_TEXT[confirmation];
-}
 
 export default GuestListPage;

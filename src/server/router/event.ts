@@ -2,6 +2,7 @@
 import { Event, Guest, GuestConfirmation, Prisma, User } from "@prisma/client";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
+import { createEventInput } from "../inputs/event";
 import { createProtectedRouter, createRouter } from "./context";
 
 export const eventPublicRouter = createRouter()
@@ -40,7 +41,7 @@ export const eventPublicRouter = createRouter()
       fields: z
         .object({
           id: z.string().cuid(),
-          value: z.string().or(z.number()),
+          value: z.string().min(1).or(z.number()),
         })
         .array(),
       action: z.enum(["next", "finalize"]),
@@ -64,14 +65,7 @@ export const eventPublicRouter = createRouter()
 
 export const eventPrivateRouter = createProtectedRouter()
   .mutation("create", {
-    input: z.object({
-      name: z.string(),
-      link: z.string(),
-      description: z.string(),
-      date: z.date(),
-      confirmationDeadline: z.date(0),
-      fields: z.string().array(),
-    }),
+    input: createEventInput,
     async resolve({ ctx, input }) {
       const { fields, ...data } = input;
 

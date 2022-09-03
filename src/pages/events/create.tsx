@@ -49,6 +49,7 @@ export default function CreateCompanyPage() {
         name: data.get("name") as string,
         link: data.get("link") as string,
         description: data.get("description") as string,
+        imageUrl: "",
         date: new Date(data.get("date") as string),
         confirmationDeadline: new Date(
           data.get("confirmation_deadline") as string

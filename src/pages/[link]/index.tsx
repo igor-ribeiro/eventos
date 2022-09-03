@@ -1,12 +1,10 @@
 import { Hero } from "@/components/Hero";
-import { formDataToJson } from "@/utils/formData-to-json";
 import { inferMutationInput, trpc } from "@/utils/trpc";
 import { ssp } from "@common/server/ssp";
-import { GuestConfirmation } from "@prisma/client";
 import { GetServerSideProps, NextPage } from "next";
 import Head from "next/head";
 import { useRouter } from "next/router";
-import { FormEvent, useEffect, useRef, useState } from "react";
+import { FormEvent, useRef, useState } from "react";
 
 export const getServerSideProps: GetServerSideProps = (ctx) =>
   ssp(ctx, (ssr) => {
@@ -23,6 +21,8 @@ const EventPage: NextPage = () => {
   const formRef = useRef<HTMLFormElement>(null);
   const [formKey, setFormKey] = useState(0);
 
+  const [confirmedOne, setConfirmedOne] = useState(false);
+
   const event = trpc.useQuery([
     "event.public.getByLink",
     {
@@ -32,13 +32,24 @@ const EventPage: NextPage = () => {
 
   const confirmGuest = trpc.useMutation(["event.public.confirmGuest"]);
 
-  function onSubmit(e: FormEvent<HTMLFormElement>) {
+  function redirectToThankYou() {
+    router.push({
+      pathname: "/[link]/obrigado",
+      query: {
+        link: router.query.link,
+      },
+    });
+  }
+
+  async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
 
     // @ts-ignore
     const button = e.nativeEvent.submitter as HTMLButtonElement | undefined;
 
-    const data = new FormData(e.target as HTMLFormElement);
+    const form = e.target as HTMLFormElement;
+
+    const data = new FormData(form);
 
     if (button) {
       data.set("action", button.value);
@@ -59,32 +70,28 @@ const EventPage: NextPage = () => {
       }
     }
 
-    confirmGuest.mutate(input as Required<typeof input>);
-  }
+    if (
+      input.action === "finalize" &&
+      input.fields.filter((field) => Boolean(field.value)).length <
+        input.fields.length &&
+      confirmedOne
+    ) {
+      redirectToThankYou();
 
-  const shouldResetForm =
-    confirmGuest.status === "success" && confirmGuest.data === "next";
+      return;
+    }
 
-  const redirectToThankYou =
-    confirmGuest.status === "success" && confirmGuest.data === "finalize";
+    await confirmGuest.mutateAsync(input as Required<typeof input>);
 
-  useEffect(() => {
-    if (shouldResetForm) {
-      formRef.current!.reset();
+    setConfirmedOne(true);
+
+    if (input.action === "next") {
+      form.reset();
       setFormKey((key) => key + 1);
+    } else {
+      redirectToThankYou();
     }
-  }, [shouldResetForm]);
-
-  useEffect(() => {
-    if (redirectToThankYou) {
-      router.push({
-        pathname: "/[link]/obrigado",
-        query: {
-          link: router.query.slug,
-        },
-      });
-    }
-  }, [redirectToThankYou, router]);
+  }
 
   if (event.data == null) {
     return null;
@@ -108,9 +115,6 @@ const EventPage: NextPage = () => {
         </h1>
         <p className="mb-4 font-bold text-1md leading-5">
           {event.data.description}
-        </p>
-        <p className="mb-4 font-bold font-sm leading-5">
-          Confirme sua presença abaixo
         </p>
       </Hero>
 
@@ -136,6 +140,7 @@ const EventPage: NextPage = () => {
                   type={field.type}
                   className="input input-bordered w-full"
                   autoFocus={i === 0}
+                  required
                 />
               </div>
             );
@@ -150,6 +155,7 @@ const EventPage: NextPage = () => {
                 <select
                   name={field.id}
                   className="select select-bordered w-full"
+                  required
                 >
                   {field.options.map((option) => (
                     <option key={option.id} value={option.name}>
@@ -181,18 +187,19 @@ const EventPage: NextPage = () => {
         </div>
         */}
 
-        <div className="grid gap-2">
+        <div className="flex gap-2 items-center">
           <button
-            className="btn btn"
+            className="btn flex-1"
             type="submit"
             name="action"
             value="next"
             disabled={confirmGuest.isLoading}
           >
-            Próximo Convidado
+            Próximo
           </button>
+          <div className="divider divider-horizontal">ou</div>
           <button
-            className="btn btn-primary"
+            className="btn btn-primary flex-1"
             type="submit"
             name="action"
             value="finalize"

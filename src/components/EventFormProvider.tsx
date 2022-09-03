@@ -1,3 +1,4 @@
+import { z } from "zod";
 import slugify from "slugify";
 import {
   createContext,
@@ -7,20 +8,21 @@ import {
   useMemo,
   useReducer,
 } from "react";
+import { inferMutationInput, inferQueryInput } from "@/utils/trpc";
+import { createEventInput } from "@/server/inputs/event";
+import { fillDateTime } from "@/utils/date";
 
 function clone<T>(item: T) {
   return JSON.parse(JSON.stringify(item)) as T;
 }
 
 type EventFormValue = {
-  data: {
-    name: string;
-    link: string;
-    description: string;
-    date: string;
-    confirmationDeadline: string;
-    fields: string[];
-    imageUrl: string;
+  data: Omit<
+    inferMutationInput<"event.create">,
+    "date" | "confirmationDeadline"
+  > & {
+    date?: Date;
+    confirmationDeadline?: Date;
   };
   linkSynced: boolean;
   isValid: boolean;
@@ -29,11 +31,11 @@ type EventFormValue = {
 const DEFAULT_VALUE: EventFormValue = {
   data: {
     name: "Nome do evento",
-    link: "",
+    link: "nome-do-evento",
     description: "descrição do evento",
     imageUrl: "",
-    date: "",
-    confirmationDeadline: "",
+    date: undefined,
+    confirmationDeadline: undefined,
     fields: [],
   },
   linkSynced: true,
@@ -81,6 +83,18 @@ function reducer(state: EventFormValue, action: Action) {
     });
   }
 
+  function isValid(data: EventFormValue["data"]) {
+    const response = createEventInput.safeParse({
+      ...data,
+      date: fillDateTime(data.date as any as string),
+      confirmationDeadline: fillDateTime(
+        data.confirmationDeadline as any as string
+      ),
+    });
+
+    return response.success;
+  }
+
   const next = clone(state);
 
   if (action.type === "SET") {
@@ -96,6 +110,8 @@ function reducer(state: EventFormValue, action: Action) {
       }
     }
 
+    next.isValid = isValid(next.data);
+
     return next;
   }
 
@@ -107,6 +123,8 @@ function reducer(state: EventFormValue, action: Action) {
     }
 
     next.linkSynced = synced;
+
+    next.isValid = isValid(next.data);
 
     return next;
   }

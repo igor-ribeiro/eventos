@@ -20,7 +20,7 @@ export const Hero: FC<{
         POSITION_CLASSES[position]
       } ${fullScreen ? "h-screen" : "h-[50vh]"}`}
     >
-      <div className="hero-content text-white">
+      <div className="hero-content text-white w-full px-8 md:w-auto">
         <div className="hero-overlay bg-opacity-60 absolute w-full h-full z-[1] top-0 left-0"></div>
         <div
           className="absolute w-full md:w-[50vw] h-full top-0 left-1/2 translate-x-[-50%] background-center"
@@ -30,7 +30,7 @@ export const Hero: FC<{
             backgroundImage: image ? `url(${image})` : undefined,
           }}
         ></div>
-        <div className="max-w-md z-[2] static">{children}</div>
+        <div className="w-full md:max-w-md z-[2] static">{children}</div>
       </div>
     </header>
   );
