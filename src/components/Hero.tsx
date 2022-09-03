@@ -16,9 +16,9 @@ export const Hero: FC<{
 }> = ({ image, fullScreen, position = "center", children }) => {
   return (
     <header
-      className={`hero bg-base-200 min-h-[200px] bg-center relative overflow-hidden ${
+      className={`hero bg-base-200 h-[70vh] bg-center relative overflow-hidden ${
         POSITION_CLASSES[position]
-      } ${fullScreen ? "h-screen" : "h-[50vh]"}`}
+      } ${fullScreen ? "h-screen" : ""}`}
     >
       <div className="hero-content text-white w-full px-8 md:w-auto">
         <div className="hero-overlay bg-opacity-60 absolute w-full h-full z-[1] top-0 left-0"></div>

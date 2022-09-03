@@ -1,9 +1,14 @@
 import { trpc } from "@/utils/trpc";
-import { AddIcon, DeleteIcon, ShareIcon } from "@common/components/Icons";
+import {
+  AddIcon,
+  DeleteIcon,
+  OpenExternalIcon,
+  ShareIcon,
+} from "@common/components/Icons";
 import { addToast } from "@common/components/Toast";
-import { copyToClipboard } from "@common/utils/clipboard";
+import { shareOrCopy } from "@common/utils/share";
+import { Event } from "@prisma/client";
 import Link from "next/link";
-import { EventIcon } from "./Icons";
 
 export const EventsTable = () => {
   const events = trpc.useQuery(["event.getAllByUser"]);
@@ -13,13 +18,21 @@ export const EventsTable = () => {
     return null;
   }
 
+  function onShare(event: Event) {
+    shareOrCopy({
+      url: `${window.location.origin}/${event.link}`,
+      text: event.name,
+    });
+  }
+
   return (
     <>
       <h1 className="text-xl leading-normal font-extrabold flex gap-6">
         Eventos
         <Link href="/criar">
-          <a className="btn btn-outline btn-sm gap-2">
-            <AddIcon /> criar
+          <a className="btn btn-secondary btn-sm gap-2">
+            <AddIcon />
+            criar
           </a>
         </Link>
       </h1>
@@ -57,18 +70,14 @@ export const EventsTable = () => {
                     <td className="text-end">
                       <button
                         className="btn btn-action"
-                        onClick={() => {
-                          copyToClipboard(
-                            `${window.location.origin}/${event.link}`
-                          ).then(() => addToast("Link copiado", "info"));
-                        }}
+                        onClick={() => onShare(event)}
                       >
                         <ShareIcon />
                       </button>
 
                       <Link href={`/${event.link}`}>
                         <a className="btn btn-action">
-                          <EventIcon />
+                          <OpenExternalIcon />
                         </a>
                       </Link>
 

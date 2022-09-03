@@ -1,6 +1,10 @@
+import { Header } from "@/components/Header";
 import { Hero } from "@/components/Hero";
+import { MinimalHeader } from "@/components/MinimalHeader";
 import { inferMutationInput, trpc } from "@/utils/trpc";
+import { CalendarIcon } from "@common/components/Icons";
 import { ssp } from "@common/server/ssp";
+import format from "date-fns/format";
 import { GetServerSideProps, NextPage } from "next";
 import Head from "next/head";
 import { useRouter } from "next/router";
@@ -87,7 +91,7 @@ const EventPage: NextPage = () => {
 
     if (input.action === "next") {
       form.reset();
-      setFormKey((key) => key + 1);
+      (form.elements[0]! as HTMLInputElement).focus();
     } else {
       redirectToThankYou();
     }
@@ -110,25 +114,39 @@ const EventPage: NextPage = () => {
       </Head>
 
       <Hero image={event.data.imageUrl} position="end">
+        <MinimalHeader />
+
         <h1 className="text-white md:text-5xl mb-4 uppercase">
           {event.data.name}
         </h1>
         <p className="mb-4 font-bold text-1md leading-5">
           {event.data.description}
         </p>
+
+        <div className="flex justify-between text-xs font-bold border-t pt-2">
+          <div className="flex items-center gap-1">
+            <CalendarIcon />
+            <span>{format(event.data.date, "dd/MM/yyyy")}</span>
+          </div>
+
+          <span>
+            Confirmar até{" "}
+            {format(event.data.confirmationDeadline, "dd/MM/yyyy")}
+          </span>
+        </div>
       </Hero>
 
       <form
         key={"form-" + formKey}
         data-key={"form-" + formKey}
         ref={formRef}
-        className="max-w-[600px] mx-auto p-3"
+        className="w-content w-content-sm p-3"
         onSubmit={onSubmit}
         action=""
       >
         <input type="hidden" name="eventId" value={event.data.id} />
 
-        {event.data.fields.map(({ id, field }, i) => {
+        {event.data.fields.map(({ id, field }) => {
           if (["TEXT", "NUMBER"].includes(field.type)) {
             return (
               <div className="form-control mb-4" key={id}>
@@ -139,7 +157,6 @@ const EventPage: NextPage = () => {
                   name={field.id}
                   type={field.type}
                   className="input input-bordered w-full"
-                  autoFocus={i === 0}
                   required
                 />
               </div>

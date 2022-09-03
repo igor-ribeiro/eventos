@@ -1,9 +1,8 @@
 export const fillDateTime = (date: string) => {
-  const today = new Date();
-
   const filled = new Date(date);
-  filled.setHours(today.getHours());
-  filled.setMinutes(today.getMinutes());
+  filled.setHours(12);
+  filled.setMinutes(0);
+  filled.setSeconds(0);
 
   return filled;
 };
