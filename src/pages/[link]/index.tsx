@@ -1,6 +1,8 @@
+import locale from "date-fns/locale/pt-BR";
 import { Header } from "@/components/Header";
 import { Hero } from "@/components/Hero";
 import { MinimalHeader } from "@/components/MinimalHeader";
+import { fillDateTime } from "@/utils/date";
 import { inferMutationInput, trpc } from "@/utils/trpc";
 import { CalendarIcon } from "@common/components/Icons";
 import { ssp } from "@common/server/ssp";
@@ -8,7 +10,7 @@ import format from "date-fns/format";
 import { GetServerSideProps, NextPage } from "next";
 import Head from "next/head";
 import { useRouter } from "next/router";
-import { FormEvent, useRef, useState } from "react";
+import { FormEvent, useMemo, useRef, useState } from "react";
 
 export const getServerSideProps: GetServerSideProps = (ctx) =>
   ssp(ctx, (ssr) => {
@@ -97,6 +99,20 @@ const EventPage: NextPage = () => {
     }
   }
 
+  const description = useMemo(() => {
+    if (!event.data) {
+      return;
+    }
+
+    return `${event.data.description} / Dia ${format(
+      fillDateTime(event.data.date.toISOString()),
+      "dd 'de' MMMM",
+      {
+        locale,
+      }
+    )}`;
+  }, [event.data]);
+
   if (event.data == null) {
     return null;
   }
@@ -105,9 +121,9 @@ const EventPage: NextPage = () => {
     <div>
       <Head>
         <title>{event.data.name}</title>
-        <meta name="description" content={event.data.description} />
+        <meta name="description" content={description} />
         <meta property="og:title" content={event.data.name} />
-        <meta property="og:description" content={event.data.description} />
+        <meta property="og:description" content={description} />
         {event.data.imageUrl && (
           <meta property="og:image" content={event.data.imageUrl} />
         )}
