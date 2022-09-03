@@ -105,20 +105,29 @@ const EventForm = () => {
           body: uploadData,
         })
       ).json();
+      try {
+        const event = await create.mutateAsync({
+          ...data,
+          imageUrl: response.url,
+          date: fillDateTime(data.date as any as string),
+          confirmationDeadline: fillDateTime(
+            data.confirmationDeadline as any as string
+          ),
+        });
 
-      const event = await create.mutateAsync({
-        ...data,
-        imageUrl: response.url,
-        date: fillDateTime(data.date as any as string),
-        confirmationDeadline: fillDateTime(
-          data.confirmationDeadline as any as string
-        ),
-      });
-
-      addToast(`Evento "${event.name}" criado`, "success");
-    } catch (e) {
+        addToast(`Evento "${event.name}" criado`, "success");
+      } catch (e: any) {
+        console.error(e);
+        addToast(
+          "Não foi possível criar o evento, tente novamente: " + e.message,
+          "error"
+        );
+      }
+    } catch (e: any) {
       console.error(e);
-      addToast("Não foi possível criar o evento, tente novamente", "error");
+      addToast("Não foi possível usar essa imagem: " + e.message, "error");
+
+      return;
     }
   }
 
@@ -303,7 +312,7 @@ const EventForm = () => {
 
         <button
           className="btn btn-primary btn-block my-4"
-          // disabled={!isValid}
+          disabled={!isValid}
           data-loading={create.isLoading}
           onClick={onCreate}
         >

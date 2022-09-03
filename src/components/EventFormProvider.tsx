@@ -107,6 +107,7 @@ function reducer(state: EventFormValue, action: Action) {
     if (action.name === "link") {
       if (action.value !== state.data.link) {
         next.data.link = getLink(action.value as string).replace(/-$/, "");
+        next.linkSynced = false;
       }
     }
 
