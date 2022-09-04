@@ -62,13 +62,13 @@ model VerificationToken {
 }
 
 model Event {
-  id                   String   @id @default(cuid())
+  id                   String    @id @default(cuid())
   name                 String
-  link                 String   @unique
-  description          String   @db.MediumText()
+  link                 String    @unique
+  description          String    @db.MediumText()
   imageUrl             String?
   date                 DateTime
-  confirmationDeadline DateTime
+  confirmationDeadline DateTime?
 
   users  User[]
   guests Guest[]

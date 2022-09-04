@@ -152,10 +152,12 @@ const EventPage: NextPage = () => {
             <span>{format(event.data.date, "dd/MM/yyyy")}</span>
           </div>
 
-          <span>
-            Confirmar até{" "}
-            {format(event.data.confirmationDeadline, "dd/MM/yyyy")}
-          </span>
+          {event.data.confirmationDeadline && (
+            <span>
+              Confirmar até{" "}
+              {format(event.data.confirmationDeadline, "dd/MM/yyyy")}
+            </span>
+          )}
         </div>
       </Hero>
 

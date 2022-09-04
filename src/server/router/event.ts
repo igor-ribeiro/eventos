@@ -74,6 +74,7 @@ export const eventPrivateRouter = createProtectedRouter()
       return ctx.prisma.event.create({
         data: {
           ...data,
+          name: data.name.toUppercase(),
           users: {
             connect: {
               id: ctx.session.user.id,

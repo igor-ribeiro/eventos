@@ -140,6 +140,7 @@ const EventForm = () => {
       return;
     } finally {
       setUploading(false);
+      setCreationStep("");
     }
   }
 
@@ -156,13 +157,14 @@ const EventForm = () => {
 
         <ToolbarButton
           label="Datas"
-          completed={Boolean(data.date) && Boolean(data.confirmationDeadline)}
+          completed={Boolean(data.date)}
           onClick={() =>
             dispatchCustomEvent("modal", {
               id: "select-dates-modal",
               action: "open",
               data: {
-                fields: data.fields,
+                date: data.date,
+                confirmationDeadline: data.confirmationDeadline,
               },
             })
           }

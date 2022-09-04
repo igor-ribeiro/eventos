@@ -1,4 +1,3 @@
-import { z } from "zod";
 import slugify from "slugify";
 import {
   createContext,
@@ -8,7 +7,7 @@ import {
   useMemo,
   useReducer,
 } from "react";
-import { inferMutationInput, inferQueryInput } from "@/utils/trpc";
+import { inferMutationInput } from "@/utils/trpc";
 import { createEventInput } from "@/server/inputs/event";
 import { fillDateTime } from "@/utils/date";
 
@@ -87,9 +86,9 @@ function reducer(state: EventFormValue, action: Action) {
     const response = createEventInput.safeParse({
       ...data,
       date: fillDateTime(data.date as any as string),
-      confirmationDeadline: fillDateTime(
-        data.confirmationDeadline as any as string
-      ),
+      confirmationDeadline: data.confirmationDeadline
+        ? fillDateTime(data.confirmationDeadline as any as string)
+        : null,
     });
 
     return response.success;

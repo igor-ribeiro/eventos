@@ -6,6 +6,6 @@ export const createEventInput = z.object({
   imageUrl: z.string().url(),
   description: z.string().min(1),
   date: z.date(),
-  confirmationDeadline: z.date(),
+  confirmationDeadline: z.date().nullish(),
   fields: z.string().array().min(1),
 });

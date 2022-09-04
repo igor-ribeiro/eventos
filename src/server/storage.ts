@@ -1,8 +1,6 @@
 import { env } from "@/env/server.mjs";
 import { Storage } from "@google-cloud/storage";
 
-console.log(env);
-
 export const storage = new Storage({
   projectId: env.GCLOUD_PROJECT_ID,
   scopes: ["https://www.googleapis.com/auth/cloud-platform"],

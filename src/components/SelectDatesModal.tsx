@@ -2,7 +2,6 @@ import { Input } from "@common/components/Input";
 import { addToast } from "@common/components/Toast";
 import { useEvent } from "@ribeirolabs/events/react";
 import { FormEvent, useCallback, useMemo, useState } from "react";
-import { useEventFormActions, useEventFormValue } from "./EventFormProvider";
 
 export const SelectDatesModal = ({
   onConfirm,
@@ -43,11 +42,6 @@ export const SelectDatesModal = ({
 
     if (!date) {
       addToast("Escolha a data do evento", "error");
-      return;
-    }
-
-    if (!confirmationDeadline) {
-      addToast("Escolha o prazo para confirmação", "error");
       return;
     }
 
@@ -96,6 +90,7 @@ export const SelectDatesModal = ({
               type="date"
               value={date}
               onChange={(e) => setDate(e.target.value)}
+              required
             />
             <Input
               label="Prazo para confirmação"
