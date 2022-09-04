@@ -290,7 +290,8 @@ const EventForm = () => {
                 >
                   {field.options.map((option) => (
                     <option key={option.id} value={option.name}>
-                      {option.name}
+                      {option.name}{" "}
+                      {option.description && `- ${option.description}`}
                     </option>
                   ))}
                 </select>
