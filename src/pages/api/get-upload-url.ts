@@ -29,11 +29,8 @@ export default async function uploadImage(
       contentType: type,
     });
 
-  const fileUrl = join(
-    env.GCLOUD_STORAGE_URL,
-    env.GCLOUD_STORAGE_BUCKET,
-    fileName
-  );
+  const fileUrl = new URL(env.GCLOUD_STORAGE_URL);
+  fileUrl.pathname = join(env.GCLOUD_STORAGE_BUCKET, fileName);
 
-  res.send({ uploadUrl, fileUrl });
+  res.send({ uploadUrl, fileUrl: fileUrl.toString() });
 }
