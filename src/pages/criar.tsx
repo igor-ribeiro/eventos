@@ -258,7 +258,7 @@ const EventForm = () => {
         </Editable>
       </Hero>
 
-      <div className="max-w- mx-auto p-3">
+      <div className="w-content w-content-sm mx-auto p-3">
         {fields.data?.map((field, i) => {
           if (["TEXT", "NUMBER"].includes(field.type)) {
             return (
