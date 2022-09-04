@@ -35,6 +35,9 @@ import {
   useState,
 } from "react";
 
+const GCLOUD_ACCESS_TOKEN =
+  "ya29.a0AVA9y1uj_5eKo0w1ZyW-1qhYrweTLEedldPimlYpZj4m8T4g4UDBHr1tgXtjPRqC9ozRB6LD_lQ3VHeIaWK6CEFJ05Wz_n1UGgeMDUURDZ6EyHhvnL0NuR6FJbKN2YH4wzv8tgWTIFNW3_c5qaWNVybo3WlDaCgYKATASAQASFQE65dr8R6AfbF3-A-bcpfIO7rKZBw0163";
+
 export const getServerSideProps: GetServerSideProps = (ctx) =>
   ssp(ctx, () => {
     return Promise.resolve();
@@ -104,12 +107,31 @@ const EventForm = () => {
     try {
       setUploading(true);
 
+      const fileName = crypto.randomUUID();
+
+      const { url } = await (
+        await fetch(`/api/get-upload-url?fileName=${fileName}`)
+      ).json();
+
+      console.log({ url });
+
       const response = await (
-        await fetch("/api/upload-image", {
-          method: "post",
+        await fetch(url, {
+          method: "put",
           body: uploadData,
         })
       ).json();
+
+      console.log(response);
+
+      return;
+
+      // const response = await (
+      //   await fetch("/api/upload-image", {
+      //     method: "post",
+      //     body: uploadData,
+      //   })
+      // ).json();
 
       URL.revokeObjectURL(data.imageUrl);
 

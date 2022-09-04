@@ -14,7 +14,6 @@ export default async function uploadImage(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
-  console.log("update image");
   const session = await getServerSession(req, res, nextAuthOptions);
 
   if (!session) {

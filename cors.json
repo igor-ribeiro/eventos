@@ -1,0 +1,7 @@
+[
+  {
+    "origin": ["http://localhost:3301", "https://eventos.ribeiro.app"],
+    "responseHeader": ["Content-Type"],
+    "method": ["GET", "POST", "PUT", "DELETE"]
+  }
+]
