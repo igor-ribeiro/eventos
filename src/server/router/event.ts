@@ -1,6 +1,4 @@
-// @ts-nocheck
-import { Event, Guest, GuestConfirmation, Prisma, User } from "@prisma/client";
-import { TRPCError } from "@trpc/server";
+import { env } from "@/env/server.mjs";
 import { basename } from "path";
 import { z } from "zod";
 import { createEventInput } from "../inputs/event";
@@ -55,7 +53,7 @@ export const eventPublicRouter = createRouter()
           fields: {
             create: input.fields.map((field) => ({
               fieldId: field.id,
-              value: field.value,
+              value: String(field.value),
             })),
           },
         },
@@ -74,7 +72,7 @@ export const eventPrivateRouter = createProtectedRouter()
       return ctx.prisma.event.create({
         data: {
           ...data,
-          name: data.name.toUppercase(),
+          name: data.name.toUpperCase(),
           users: {
             connect: {
               id: ctx.session.user.id,
@@ -98,7 +96,7 @@ export const eventPrivateRouter = createProtectedRouter()
       id: z.string().cuid(),
     }),
     async resolve({ ctx, input }) {
-      const { imageUrl } = await ctx.prisma.event.findFirst({
+      const { imageUrl } = await ctx.prisma.event.findFirstOrThrow({
         where: {
           id: input.id,
         },
@@ -107,12 +105,19 @@ export const eventPrivateRouter = createProtectedRouter()
         },
       });
 
-      const filename = decodeURIComponent(basename(new URL(imageUrl).pathname));
+      if (imageUrl) {
+        const filename = decodeURIComponent(
+          basename(new URL(imageUrl).pathname)
+        );
 
-      try {
-        await storage.bucket("ribeirolabs-events").file(filename).delete();
-      } catch (e) {
-        console.log(`Error deleting file "${filename}": ${e}`);
+        try {
+          await storage
+            .bucket(env.GCLOUD_STORAGE_BUCKET)
+            .file(filename)
+            .delete();
+        } catch (e) {
+          console.log(`Error deleting file "${filename}": ${e}`);
+        }
       }
 
       return ctx.prisma.event.delete({
