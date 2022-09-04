@@ -15,6 +15,8 @@ export const serverSchema = z.object({
   GCLOUD_PROJECT_ID: z.string(),
   GCLOUD_CLIENT_EMAIL: z.string(),
   GCLOUD_CLIENT_KEY: z.string(),
+  GCLOUD_STORAGE_BUCKET: z.string(),
+  GCLOUD_STORAGE_URL: z.string(),
 });
 
 /**
@@ -23,7 +25,7 @@ export const serverSchema = z.object({
  * To expose them to the client, prefix them with `NEXT_PUBLIC_`.
  */
 export const clientSchema = z.object({
-  // NEXT_PUBLIC_BAR: z.string(),
+  // NEXT_PUBLIC_IMAGE_URL: z.string(),
 });
 
 /**
@@ -33,5 +35,5 @@ export const clientSchema = z.object({
  * @type {{ [k in keyof z.infer<typeof clientSchema>]: z.infer<typeof clientSchema>[k] | undefined }}
  */
 export const clientEnv = {
-  // NEXT_PUBLIC_BAR: process.env.NEXT_PUBLIC_BAR,
+  // NEXT_PUBLIC_IMAGE_URL: process.env.NEXT_PUBLIC_IMAGE_URL,
 };

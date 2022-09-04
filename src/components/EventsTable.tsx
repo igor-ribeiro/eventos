@@ -1,3 +1,4 @@
+import { shareEvent } from "@/utils/event";
 import { trpc } from "@/utils/trpc";
 import {
   AddIcon,
@@ -6,7 +7,6 @@ import {
   ShareIcon,
 } from "@common/components/Icons";
 import { addToast } from "@common/components/Toast";
-import { shareOrCopy } from "@common/utils/share";
 import { Event } from "@prisma/client";
 import Link from "next/link";
 
@@ -19,10 +19,7 @@ export const EventsTable = () => {
   }
 
   function onShare(event: Event) {
-    shareOrCopy({
-      url: `${window.location.origin}/${event.link}`,
-      text: event.name,
-    });
+    shareEvent(event);
   }
 
   return (

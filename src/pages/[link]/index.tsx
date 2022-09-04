@@ -1,16 +1,16 @@
 import locale from "date-fns/locale/pt-BR";
-import { Header } from "@/components/Header";
 import { Hero } from "@/components/Hero";
 import { MinimalHeader } from "@/components/MinimalHeader";
 import { fillDateTime } from "@/utils/date";
 import { inferMutationInput, trpc } from "@/utils/trpc";
-import { CalendarIcon } from "@common/components/Icons";
+import { CalendarIcon, ShareIcon } from "@common/components/Icons";
 import { ssp } from "@common/server/ssp";
 import format from "date-fns/format";
 import { GetServerSideProps, NextPage } from "next";
 import Head from "next/head";
 import { useRouter } from "next/router";
 import { FormEvent, useMemo, useRef, useState } from "react";
+import { shareEvent } from "@/utils/event";
 
 export const getServerSideProps: GetServerSideProps = (ctx) =>
   ssp(ctx, (ssr) => {
@@ -130,7 +130,14 @@ const EventPage: NextPage = () => {
       </Head>
 
       <Hero image={event.data.imageUrl} position="end">
-        <MinimalHeader />
+        <MinimalHeader>
+          <button
+            className="btn btn-circle btn-ghost"
+            onClick={() => shareEvent(event.data!)}
+          >
+            <ShareIcon />
+          </button>
+        </MinimalHeader>
 
         <h1 className="text-white md:text-5xl mb-4 uppercase">
           {event.data.name}

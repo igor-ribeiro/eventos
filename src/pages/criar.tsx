@@ -9,6 +9,7 @@ import { SelectFieldModal } from "@/components/SelectFieldModal";
 import { SelectLinkModal } from "@/components/SelectLinkModal";
 import { fillDateTime } from "@/utils/date";
 import { trpc } from "@/utils/trpc";
+import { uploadFile } from "@/utils/upload-file";
 import {
   CalendarIcon,
   IdentificationIcon,
@@ -67,6 +68,7 @@ const EventForm = () => {
   const { data, isValid, linkSynced } = useEventFormValue();
   const actions = useEventFormActions();
   const [uploading, setUploading] = useState(false);
+  const [creationStep, setCreationStep] = useState("");
 
   const fields = trpc.useQuery([
     "field.get",
@@ -101,44 +103,21 @@ const EventForm = () => {
   async function onCreate() {
     const file = inputRef.current!.files![0]!;
 
-    const uploadData = new FormData();
-    uploadData.append("file", file);
-
     try {
       setUploading(true);
 
-      const fileName = crypto.randomUUID();
+      setCreationStep("Salvando imagem...");
 
-      const { url } = await (
-        await fetch(`/api/get-upload-url?fileName=${fileName}`)
-      ).json();
-
-      console.log({ url });
-
-      const response = await (
-        await fetch(url, {
-          method: "put",
-          body: uploadData,
-        })
-      ).json();
-
-      console.log(response);
-
-      return;
-
-      // const response = await (
-      //   await fetch("/api/upload-image", {
-      //     method: "post",
-      //     body: uploadData,
-      //   })
-      // ).json();
+      const imageUrl = await uploadFile(file);
 
       URL.revokeObjectURL(data.imageUrl);
 
       try {
+        setCreationStep("Criando evento...");
+
         const event = await create.mutateAsync({
           ...data,
-          imageUrl: response.url,
+          imageUrl,
           date: fillDateTime(data.date as any as string),
           confirmationDeadline: fillDateTime(
             data.confirmationDeadline as any as string
@@ -152,14 +131,11 @@ const EventForm = () => {
         router.push(`/${event.link}`);
       } catch (e: any) {
         console.error(e);
-        addToast(
-          "Não foi possível criar o evento, tente novamente: " + e.message,
-          "error"
-        );
+        addToast("Não foi possível criar o evento, tente novamente", "error");
       }
     } catch (e: any) {
       console.error(e);
-      addToast("Não foi possível usar essa imagem: " + e.message, "error");
+      addToast("Não foi possível usar essa imagem", "error");
 
       return;
     } finally {
@@ -348,11 +324,11 @@ const EventForm = () => {
 
         <button
           className="btn btn-primary btn-block my-4"
-          // disabled={!isValid}
+          disabled={!isValid}
           data-loading={create.isLoading || uploading}
           onClick={onCreate}
         >
-          Criar evento
+          {creationStep || "Criar evento"}
         </button>
       </div>
 

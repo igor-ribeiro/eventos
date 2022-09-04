@@ -5,7 +5,7 @@ import { EventsTable } from "@/components/EventsTable";
 import { ssp } from "@common/server/ssp";
 
 export const getServerSideProps: GetServerSideProps = (ctx) => {
-  return ssp(ctx, (ssr) => ssr.fetchQuery("event.getAllByUser"));
+  return ssp(ctx, (ssr) => ssr.prefetchQuery("event.getAllByUser"));
 };
 
 const Home: NextPage = () => {
