@@ -187,6 +187,7 @@ const EventPage: NextPage = () => {
           }
 
           if (field.type === "OPTION") {
+            console.log(field.options);
             return (
               <div className="form-control mb-4" key={id}>
                 <label className="label font-bold" htmlFor={field.id}>
@@ -200,7 +201,7 @@ const EventPage: NextPage = () => {
                 >
                   {field.options.map((option) => (
                     <option key={option.id} value={option.name}>
-                      {option.description ?? option.name}
+                      {option.description || option.name}
                     </option>
                   ))}
                 </select>
