@@ -3,7 +3,7 @@ import { Hero } from "@/components/Hero";
 import { MinimalHeader } from "@/components/MinimalHeader";
 import { fillDateTime } from "@/utils/date";
 import { inferMutationInput, trpc } from "@/utils/trpc";
-import { CalendarIcon, ShareIcon } from "@common/components/Icons";
+import { ShareIcon } from "@common/components/Icons";
 import { ssp } from "@common/server/ssp";
 import format from "date-fns/format";
 import { GetServerSideProps, NextPage } from "next";
@@ -11,6 +11,7 @@ import Head from "next/head";
 import { useRouter } from "next/router";
 import { FormEvent, useMemo, useRef, useState } from "react";
 import { shareEvent } from "@/utils/event";
+import { EventHeroDates } from "@/components/EventHero";
 
 export const getServerSideProps: GetServerSideProps = (ctx) =>
   ssp(ctx, (ssr) => {
@@ -146,19 +147,10 @@ const EventPage: NextPage = () => {
           {event.data.description}
         </p>
 
-        <div className="flex justify-between text-xs font-bold border-t pt-2">
-          <div className="flex items-center gap-1">
-            <CalendarIcon />
-            <span>{format(event.data.date, "dd/MM/yyyy")}</span>
-          </div>
-
-          {event.data.confirmationDeadline && (
-            <span>
-              Confirmar até{" "}
-              {format(event.data.confirmationDeadline, "dd/MM/yyyy")}
-            </span>
-          )}
-        </div>
+        <EventHeroDates
+          date={event.data.date}
+          confirmationDeadline={event.data.confirmationDeadline}
+        />
       </Hero>
 
       <form

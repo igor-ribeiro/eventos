@@ -3,6 +3,7 @@ import {
   useEventFormActions,
   useEventFormValue,
 } from "@/components/EventFormProvider";
+import { EventHeroDates } from "@/components/EventHero";
 import { Hero } from "@/components/Hero";
 import { SelectDatesModal } from "@/components/SelectDatesModal";
 import { SelectFieldModal } from "@/components/SelectFieldModal";
@@ -35,9 +36,6 @@ import {
   useRef,
   useState,
 } from "react";
-
-const GCLOUD_ACCESS_TOKEN =
-  "ya29.a0AVA9y1uj_5eKo0w1ZyW-1qhYrweTLEedldPimlYpZj4m8T4g4UDBHr1tgXtjPRqC9ozRB6LD_lQ3VHeIaWK6CEFJ05Wz_n1UGgeMDUURDZ6EyHhvnL0NuR6FJbKN2YH4wzv8tgWTIFNW3_c5qaWNVybo3WlDaCgYKATASAQASFQE65dr8R6AfbF3-A-bcpfIO7rKZBw0163";
 
 export const getServerSideProps: GetServerSideProps = (ctx) =>
   ssp(ctx, () => {
@@ -144,6 +142,37 @@ const EventForm = () => {
     }
   }
 
+  function openDatesModal() {
+    dispatchCustomEvent("modal", {
+      id: "select-dates-modal",
+      action: "open",
+      data: {
+        date: data.date,
+        confirmationDeadline: data.confirmationDeadline,
+      },
+    });
+  }
+
+  function openFieldsModal() {
+    dispatchCustomEvent("modal", {
+      id: "select-field-modal",
+      action: "open",
+      data: {
+        fields: data.fields,
+      },
+    });
+  }
+
+  function openLinkModal() {
+    dispatchCustomEvent("modal", {
+      id: "select-link-modal",
+      action: "open",
+      data: {
+        link: data.link,
+      },
+    });
+  }
+
   return (
     <div className="relative -m-4">
       <div className="absolute top-0 left-0 w-full z-10 p-4 flex items-center justify-center gap-2">
@@ -158,16 +187,7 @@ const EventForm = () => {
         <ToolbarButton
           label="Datas"
           completed={Boolean(data.date)}
-          onClick={() =>
-            dispatchCustomEvent("modal", {
-              id: "select-dates-modal",
-              action: "open",
-              data: {
-                date: data.date,
-                confirmationDeadline: data.confirmationDeadline,
-              },
-            })
-          }
+          onClick={openDatesModal}
         >
           <CalendarIcon />
         </ToolbarButton>
@@ -175,15 +195,7 @@ const EventForm = () => {
         <ToolbarButton
           label="Convidados"
           completed={data.fields.length > 0}
-          onClick={() =>
-            dispatchCustomEvent("modal", {
-              id: "select-field-modal",
-              action: "open",
-              data: {
-                fields: data.fields,
-              },
-            })
-          }
+          onClick={openFieldsModal}
         >
           <IdentificationIcon />
         </ToolbarButton>
@@ -191,15 +203,7 @@ const EventForm = () => {
         <ToolbarButton
           label="Link"
           completed={Boolean(data.link)}
-          onClick={() =>
-            dispatchCustomEvent("modal", {
-              id: "select-link-modal",
-              action: "open",
-              data: {
-                link: data.link,
-              },
-            })
-          }
+          onClick={openLinkModal}
         >
           <LinkIcon />
         </ToolbarButton>
@@ -218,18 +222,7 @@ const EventForm = () => {
 
       <Hero position="end" image={data.imageUrl}>
         <div className="flex gap-1 justify-center my-2">
-          <button
-            className="btn btn-sm lowercase"
-            onClick={() =>
-              dispatchCustomEvent("modal", {
-                id: "select-link-modal",
-                action: "open",
-                data: {
-                  link: data.link,
-                },
-              })
-            }
-          >
+          <button className="btn btn-sm lowercase" onClick={openLinkModal}>
             <span className="text-xs">/{data.link}</span>
           </button>
 
@@ -258,6 +251,12 @@ const EventForm = () => {
         >
           <p className="mb-4 font-bold text-1md leading-5" />
         </Editable>
+
+        <EventHeroDates
+          date={data.date}
+          confirmationDeadline={data.confirmationDeadline}
+          onClick={openDatesModal}
+        />
       </Hero>
 
       <div className="w-content w-content-sm mx-auto p-3">

@@ -1,8 +1,11 @@
-export const fillDateTime = (date: string) => {
-  const filled = new Date(date);
-  filled.setHours(12);
-  filled.setMinutes(0);
-  filled.setSeconds(0);
+export const fillDateTime = (date: string | Date) => {
+  if (date instanceof Date) {
+    return date;
+  }
 
-  return filled;
+  const [onlyDate] = date.split("T") as string[];
+
+  const [_todayDate, todayTime] = new Date().toISOString().split("T");
+
+  return new Date([onlyDate, todayTime].join("T"));
 };

@@ -85,7 +85,7 @@ function reducer(state: EventFormValue, action: Action) {
   function isValid(data: EventFormValue["data"]) {
     const response = createEventInput.safeParse({
       ...data,
-      date: fillDateTime(data.date as any as string),
+      date: data.date ? fillDateTime(data.date as any as string) : null,
       confirmationDeadline: data.confirmationDeadline
         ? fillDateTime(data.confirmationDeadline as any as string)
         : null,
