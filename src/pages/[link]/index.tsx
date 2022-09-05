@@ -11,7 +11,11 @@ import Head from "next/head";
 import { useRouter } from "next/router";
 import { FormEvent, useMemo, useRef, useState } from "react";
 import { shareEvent } from "@/utils/event";
-import { EventHeroDates } from "@/components/EventHero";
+import {
+  EventHeroDates,
+  EventHeroDescription,
+  EventHeroTitle,
+} from "@/components/EventHero";
 
 export const getServerSideProps: GetServerSideProps = (ctx) =>
   ssp(ctx, (ssr) => {
@@ -140,12 +144,8 @@ const EventPage: NextPage = () => {
           </button>
         </MinimalHeader>
 
-        <h1 className="text-white md:text-5xl mb-4 uppercase">
-          {event.data.name}
-        </h1>
-        <p className="mb-4 font-bold text-1md leading-5">
-          {event.data.description}
-        </p>
+        <EventHeroTitle>{event.data.name}</EventHeroTitle>
+        <EventHeroDescription>{event.data.description}</EventHeroDescription>
 
         <EventHeroDates
           date={event.data.date}

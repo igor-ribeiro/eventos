@@ -3,7 +3,11 @@ import {
   useEventFormActions,
   useEventFormValue,
 } from "@/components/EventFormProvider";
-import { EventHeroDates } from "@/components/EventHero";
+import {
+  EventHeroDates,
+  EventHeroDescription,
+  EventHeroTitle,
+} from "@/components/EventHero";
 import { Hero } from "@/components/Hero";
 import { SelectDatesModal } from "@/components/SelectDatesModal";
 import { SelectFieldModal } from "@/components/SelectFieldModal";
@@ -241,7 +245,7 @@ const EventForm = () => {
           value={data.name}
           onChange={(value) => actions.set("name", value)}
         >
-          <h1 className="text-white md:text-5xl mb-4 uppercase" />
+          <EventHeroTitle />
         </Editable>
 
         <Editable
@@ -249,7 +253,7 @@ const EventForm = () => {
           value="Descrição do evento"
           onChange={(value) => actions.set("description", value)}
         >
-          <p className="mb-4 font-bold text-1md leading-5" />
+          <EventHeroDescription />
         </Editable>
 
         <EventHeroDates
