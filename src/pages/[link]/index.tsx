@@ -33,6 +33,7 @@ const EventPage: NextPage = () => {
   const [formKey, setFormKey] = useState(0);
 
   const [confirmedOne, setConfirmedOne] = useState(false);
+  const [loading, setLoading] = useState("");
 
   const event = trpc.useQuery([
     "event.public.getByLink",
@@ -81,6 +82,8 @@ const EventPage: NextPage = () => {
       }
     }
 
+    setLoading(input.action);
+
     if (
       input.action === "finalize" &&
       input.fields.filter((field) => Boolean(field.value)).length <
@@ -95,10 +98,12 @@ const EventPage: NextPage = () => {
     await confirmGuest.mutateAsync(input as Required<typeof input>);
 
     setConfirmedOne(true);
+    setLoading("");
 
     if (input.action === "next") {
       form.reset();
       (form.elements[0]! as HTMLInputElement).focus();
+      setFormKey((old) => old + 1);
     } else {
       redirectToThankYou();
     }
@@ -163,7 +168,7 @@ const EventPage: NextPage = () => {
       >
         <input type="hidden" name="eventId" value={event.data.id} />
 
-        {event.data.fields.map(({ id, field }) => {
+        {event.data.fields.map(({ id, field }, i) => {
           if (["TEXT", "NUMBER"].includes(field.type)) {
             return (
               <div className="form-control mb-4" key={id}>
@@ -175,6 +180,7 @@ const EventPage: NextPage = () => {
                   type={field.type}
                   className="input input-bordered w-full"
                   required
+                  autoFocus={i === 0}
                 />
               </div>
             );
@@ -190,6 +196,7 @@ const EventPage: NextPage = () => {
                   name={field.id}
                   className="select select-bordered w-full"
                   required
+                  autoFocus={i === 0}
                 >
                   {field.options.map((option) => (
                     <option key={option.id} value={option.name}>
@@ -204,30 +211,14 @@ const EventPage: NextPage = () => {
           return null;
         })}
 
-        {/*
-        <div className="form-control mb-4">
-          <label className="label font-bold" htmlFor="confirmation">
-            Confirmar Presença
-          </label>
-          <select
-            name="confirmation"
-            className="select select-bordered w-full"
-            defaultValue={GuestConfirmation.YES}
-          >
-            <option value={GuestConfirmation.YES}>Sim</option>
-            <option value={GuestConfirmation.MAYBE}>Talvez</option>
-            <option value={GuestConfirmation.NO}>Não</option>
-          </select>
-        </div>
-        */}
-
         <div className="flex gap-2 items-center">
           <button
             className="btn flex-1"
             type="submit"
             name="action"
             value="next"
-            disabled={confirmGuest.isLoading}
+            data-loading={confirmGuest.isLoading && loading === "next"}
+            disabled={confirmGuest.isLoading && loading !== "next"}
           >
             Próximo
           </button>
@@ -237,7 +228,8 @@ const EventPage: NextPage = () => {
             type="submit"
             name="action"
             value="finalize"
-            disabled={confirmGuest.isLoading}
+            data-loading={confirmGuest.isLoading && loading === "finalize"}
+            disabled={confirmGuest.isLoading && loading !== "finalize"}
           >
             Finalizar
           </button>

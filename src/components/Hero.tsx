@@ -21,15 +21,19 @@ export const Hero: FC<{
       } ${fullScreen ? "h-screen" : ""}`}
     >
       <div className="hero-content text-white w-full px-8 md:max-w-md">
-        <div className="hero-overlay bg-opacity-60 absolute w-full h-full z-[1] top-0 left-0"></div>
         <div
-          className="absolute w-full md:max-w-md h-full top-0 left-1/2 translate-x-[-50%] background-center"
+          className="absolute sm:blur w-full h-full top-0 left-0 bg-cover bg-center bg-no-repeat"
           style={{
-            backgroundPosition: "center center",
-            backgroundSize: "cover",
             backgroundImage: image ? `url(${image})` : undefined,
           }}
         ></div>
+        <div
+          className="absolute w-full md:max-w-md h-full top-0 left-1/2 translate-x-[-50%] bg-center bg-cover"
+          style={{
+            backgroundImage: image ? `url(${image})` : undefined,
+          }}
+        ></div>
+        <div className="hero-overlay bg-opacity-60 absolute w-full h-full z-[1] top-0 left-0"></div>
         <div className="w-full md:max-w-md z-[2] static">{children}</div>
       </div>
     </header>

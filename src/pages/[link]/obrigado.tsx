@@ -6,6 +6,7 @@ import { GetServerSidePropsContext, NextPage, NextPageContext } from "next";
 import Head from "next/head";
 import { useRouter } from "next/router";
 import locale from "date-fns/locale/pt-BR";
+import { MinimalHeader } from "@/components/MinimalHeader";
 
 export const getServerSideProps = (ctx: GetServerSidePropsContext) =>
   ssp(ctx, async (ssr) => {
@@ -35,15 +36,19 @@ const ThankYouPage: NextPage = () => {
         <meta name="description" content={event.data.description} />
       </Head>
 
-      <h1 className="text-white md:text-5xl mb-4 uppercase text-center">
-        Obrigado pela confirmação
-      </h1>
-      <p className="mb-4 font-bold text-1md">
-        Te esperamos dia{" "}
-        {format(event.data.date, "dd 'de' MMMM", {
-          locale,
-        })}
-      </p>
+      <MinimalHeader />
+
+      <div className="text-center">
+        <h1 className="text-white md:text-5xl mb-4 uppercase">
+          Obrigado pela confirmação
+        </h1>
+        <p className="mb-4 font-bold text-1md">
+          Te esperamos dia{" "}
+          {format(event.data.date, "dd 'de' MMMM", {
+            locale,
+          })}
+        </p>
+      </div>
     </Hero>
   );
 };

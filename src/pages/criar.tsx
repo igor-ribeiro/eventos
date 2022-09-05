@@ -275,7 +275,6 @@ const EventForm = () => {
                   name={field.id}
                   type={field.type}
                   className="input input-bordered w-full"
-                  autoFocus={i === 0 && !isCreating}
                 />
               </div>
             );
