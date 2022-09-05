@@ -1,4 +1,5 @@
 import { env } from "@/env/server.mjs";
+import { TRPCError } from "@trpc/server";
 import { basename } from "path";
 import { z } from "zod";
 import { createEventInput } from "../inputs/event";
@@ -31,6 +32,10 @@ export const eventPublicRouter = createRouter()
           },
         },
       });
+
+      if (event == null) {
+        throw new TRPCError({ code: "NOT_FOUND" });
+      }
 
       return event;
     },
@@ -150,6 +155,11 @@ export const eventPrivateRouter = createProtectedRouter()
           link: input.link,
         },
         include: {
+          users: {
+            select: {
+              id: true,
+            },
+          },
           fields: {
             include: {
               field: true,
@@ -172,6 +182,16 @@ export const eventPrivateRouter = createProtectedRouter()
           },
         },
       });
+
+      if (event == null) {
+        throw new TRPCError({ code: "NOT_FOUND" });
+      }
+
+      console.log(event.users, ctx.session.user.id);
+
+      if (event.users.find((user) => user.id === ctx.session.user.id) == null) {
+        throw new TRPCError({ code: "FORBIDDEN" });
+      }
 
       return event;
     },

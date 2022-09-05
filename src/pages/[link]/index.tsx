@@ -9,22 +9,29 @@ import format from "date-fns/format";
 import { GetServerSideProps, NextPage } from "next";
 import Head from "next/head";
 import { useRouter } from "next/router";
-import { FormEvent, useMemo, useRef, useState } from "react";
+import { FormEvent, useContext, useMemo, useRef, useState } from "react";
 import { shareEvent } from "@/utils/event";
 import {
   EventHeroDates,
   EventHeroDescription,
   EventHeroTitle,
 } from "@/components/EventHero";
+import { ErrorContainer, ErrorContext } from "@common/components/Error";
 
 export const getServerSideProps: GetServerSideProps = (ctx) =>
-  ssp(ctx, (ssr) => {
-    return [
-      ssr.fetchQuery("event.public.getByLink", {
-        link: ctx.query.link as string,
-      }),
-    ];
+  ssp(ctx, async (ssr) => {
+    return ssr.fetchQuery("event.public.getByLink", {
+      link: ctx.query.link as string,
+    });
   });
+
+const Page: NextPage = () => {
+  return (
+    <ErrorContainer>
+      <EventPage />
+    </ErrorContainer>
+  );
+};
 
 const EventPage: NextPage = () => {
   const router = useRouter();
@@ -240,4 +247,4 @@ const EventPage: NextPage = () => {
   );
 };
 
-export default EventPage;
+export default Page;

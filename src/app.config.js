@@ -10,4 +10,8 @@ module.exports = {
       neutral: "#0c0c0a",
     },
   },
+  errors: {
+    FORBIDDEN: "Você não tem acesso à essa página.",
+    NOT_FOUND: "Página não encontrada.",
+  },
 };

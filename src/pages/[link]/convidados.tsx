@@ -8,6 +8,7 @@ import { ClearIcon, DownloadIcon } from "@/components/Icons";
 import { ProtectedPage } from "@common/components/ProtectedPage";
 import { ssp } from "@common/server/ssp";
 import { DeleteIcon } from "@common/components/Icons";
+import { TRPC_ERROR_CODE_KEY } from "@trpc/server/rpc";
 
 type Filter = {
   name: string;
