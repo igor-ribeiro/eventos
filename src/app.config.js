@@ -12,6 +12,9 @@ module.exports = {
   },
   errors: {
     FORBIDDEN: "Você não tem acesso à essa página.",
-    NOT_FOUND: "Página não encontrada.",
+    NOT_FOUND: "Ops! Essa página não existe",
+  },
+  translations: {
+    back_homepage: "Voltar à página inicial",
   },
 };

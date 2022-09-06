@@ -187,8 +187,6 @@ export const eventPrivateRouter = createProtectedRouter()
         throw new TRPCError({ code: "NOT_FOUND" });
       }
 
-      console.log(event.users, ctx.session.user.id);
-
       if (event.users.find((user) => user.id === ctx.session.user.id) == null) {
         throw new TRPCError({ code: "FORBIDDEN" });
       }

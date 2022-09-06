@@ -9,14 +9,13 @@ import format from "date-fns/format";
 import { GetServerSideProps, NextPage } from "next";
 import Head from "next/head";
 import { useRouter } from "next/router";
-import { FormEvent, useContext, useMemo, useRef, useState } from "react";
+import { FormEvent, useMemo, useRef, useState } from "react";
 import { shareEvent } from "@/utils/event";
 import {
   EventHeroDates,
   EventHeroDescription,
   EventHeroTitle,
 } from "@/components/EventHero";
-import { ErrorContainer, ErrorContext } from "@common/components/Error";
 
 export const getServerSideProps: GetServerSideProps = (ctx) =>
   ssp(ctx, async (ssr) => {
@@ -24,14 +23,6 @@ export const getServerSideProps: GetServerSideProps = (ctx) =>
       link: ctx.query.link as string,
     });
   });
-
-const Page: NextPage = () => {
-  return (
-    <ErrorContainer>
-      <EventPage />
-    </ErrorContainer>
-  );
-};
 
 const EventPage: NextPage = () => {
   const router = useRouter();
@@ -194,7 +185,6 @@ const EventPage: NextPage = () => {
           }
 
           if (field.type === "OPTION") {
-            console.log(field.options);
             return (
               <div className="form-control mb-4" key={id}>
                 <label className="label font-bold" htmlFor={field.id}>
@@ -247,4 +237,4 @@ const EventPage: NextPage = () => {
   );
 };
 
-export default Page;
+export default EventPage;
