@@ -16,5 +16,7 @@ module.exports = {
   },
   translations: {
     back_homepage: "Voltar à página inicial",
+    sign_out: "Sair",
+    sign_in: "Entrar",
   },
 };
