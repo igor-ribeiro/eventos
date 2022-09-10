@@ -362,20 +362,18 @@ const ToolbarButton = ({
   return (
     <div className="indicator">
       {!completed && (
-        <span className="indicator-center indicator-item badge badge-secondary animate-pulse rounded-full badge-xs"></span>
+        <span className="indicator-center indicator-item badge badge-xs rounded-full bg-primary">
+          <span className="animate-ping absolute h-full w-full rounded-full bg-primary opacity-75"></span>
+        </span>
       )}
 
       <button
-        className={`btn  flex-col ${
-          completed ? "btn-success" : "animate-pulse"
-        }`}
+        className={`btn gap-1 flex-col ${completed ? "btn-success" : ""}`}
         onClick={onClick}
         title={label}
       >
-        <>
-          {children}
-          <span className="text-xs md:inline-block">{label}</span>
-        </>
+        {children}
+        <span className="text-xs md:inline-block">{label}</span>
       </button>
     </div>
   );
