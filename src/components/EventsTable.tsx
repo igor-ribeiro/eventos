@@ -27,7 +27,7 @@ export const EventsTable = () => {
       <h1 className="text-xl leading-normal font-extrabold flex gap-6">
         Eventos
         <Link href="/criar">
-          <a className="btn btn-secondary  gap-2">
+          <a className="btn btn-secondary btn-sm gap-1">
             <AddIcon />
             criar
           </a>
