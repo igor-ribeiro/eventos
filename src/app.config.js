@@ -1,12 +1,14 @@
 /** @type {AppConfig} */
 module.exports = {
   appName: "eventos",
-  defaultSettings: {},
+  defaultSettings: {
+    theme: "dark",
+  },
   theme: {
     colors: {
       primary: "orange",
       // secondary: "white",
-      secndary: "#44BBA4",
+      secondary: "#44BBA4",
       neutral: "#0c0c0a",
     },
   },
@@ -18,5 +20,6 @@ module.exports = {
     back_homepage: "Voltar à página inicial",
     sign_out: "Sair",
     sign_in: "Entrar",
+    theme: "Tema",
   },
 };
