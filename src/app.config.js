@@ -1,9 +1,7 @@
 /** @type {AppConfig} */
 module.exports = {
   appName: "eventos",
-  defaultSettings: {
-    theme: "dark",
-  },
+  defaultSettings: {},
   theme: {
     colors: {
       primary: "orange",
