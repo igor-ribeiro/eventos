@@ -5,7 +5,7 @@ import { PropsWithChildren } from "react";
 
 export const MinimalHeader = ({ children }: PropsWithChildren) => {
   return (
-    <header className="absolute flex items-center justify-between w-content w-content-sm left-1/2 -translate-x-1/2 top-0 z-40 p-2">
+    <header className="not-prose absolute flex items-center justify-between w-content w-content-sm left-1/2 -translate-x-1/2 top-0 z-40 p-2">
       <HeaderLogo appName={appName} />
       {children}
     </header>

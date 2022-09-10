@@ -20,7 +20,7 @@ export const Hero: FC<{
         POSITION_CLASSES[position]
       } ${fullScreen ? "h-screen" : ""}`}
     >
-      <div className="hero-content text-white w-full px-8 md:max-w-md">
+      <div className="hero-content text-white w-full px-8 md:max-w-lg">
         <div
           className="absolute sm:blur w-full h-full top-0 left-0 bg-cover bg-center bg-no-repeat"
           style={{
@@ -28,7 +28,7 @@ export const Hero: FC<{
           }}
         ></div>
         <div
-          className="absolute w-full md:max-w-md h-full top-0 left-1/2 translate-x-[-50%] bg-center bg-cover"
+          className="absolute w-full md:w-content-sm h-full top-0 left-1/2 translate-x-[-50%] bg-center bg-cover"
           style={{
             backgroundImage: image ? `url(${image})` : undefined,
           }}

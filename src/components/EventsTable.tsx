@@ -27,7 +27,7 @@ export const EventsTable = () => {
       <h1 className="text-xl leading-normal font-extrabold flex gap-6">
         Eventos
         <Link href="/criar">
-          <a className="btn btn-secondary btn-sm gap-2">
+          <a className="btn btn-secondary  gap-2">
             <AddIcon />
             criar
           </a>
@@ -35,7 +35,7 @@ export const EventsTable = () => {
       </h1>
 
       <div className="overflow-x-auto">
-        <table className="table table-zebra w-full border border-base-300">
+        <table className="table table-compact w-full border border-base-300">
           <thead>
             <tr>
               <th className="w-[56px]"></th>
@@ -64,43 +64,47 @@ export const EventsTable = () => {
                       </Link>
                     </td>
                     <td>{event.date.toLocaleDateString()}</td>
-                    <td className="text-end">
-                      <button
-                        className="btn btn-action"
-                        onClick={() => onShare(event)}
-                      >
-                        <ShareIcon />
-                      </button>
+                    <td className="text-end not-prose">
+                      <ul className="table-actions">
+                        <li>
+                          <button onClick={() => onShare(event)}>
+                            <ShareIcon />
+                          </button>
+                        </li>
 
-                      <Link href={`/${event.link}`}>
-                        <a className="btn btn-action">
-                          <OpenExternalIcon />
-                        </a>
-                      </Link>
+                        <li>
+                          <Link href={`/${event.link}`}>
+                            <a>
+                              <OpenExternalIcon />
+                            </a>
+                          </Link>
+                        </li>
 
-                      <button
-                        className="btn btn-action"
-                        onClick={() => {
-                          deleteEvent
-                            .mutateAsync({ id: event.id })
-                            .then((old) => {
-                              addToast(
-                                `Evento "${old.name}" removido`,
-                                "success"
-                              );
-                              events.refetch();
-                            })
-                            .catch(() =>
-                              addToast(
-                                "Não foi possível remover o evento",
-                                "error"
-                              )
-                            );
-                        }}
-                        data-loading={deleteEvent.isLoading}
-                      >
-                        {deleteEvent.isLoading ? null : <DeleteIcon />}
-                      </button>
+                        <li>
+                          <button
+                            onClick={() => {
+                              deleteEvent
+                                .mutateAsync({ id: event.id })
+                                .then((old) => {
+                                  addToast(
+                                    `Evento "${old.name}" removido`,
+                                    "success"
+                                  );
+                                  events.refetch();
+                                })
+                                .catch(() =>
+                                  addToast(
+                                    "Não foi possível remover o evento",
+                                    "error"
+                                  )
+                                );
+                            }}
+                            data-loading={deleteEvent.isLoading}
+                          >
+                            {deleteEvent.isLoading ? null : <DeleteIcon />}
+                          </button>
+                        </li>
+                      </ul>
                     </td>
                   </tr>
                 );
