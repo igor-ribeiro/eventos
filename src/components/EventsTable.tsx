@@ -35,7 +35,7 @@ export const EventsTable = () => {
       </h1>
 
       <div className="overflow-x-auto">
-        <table className="table table-compact w-full border border-base-300">
+        <table className="table w-full border border-base-300">
           <thead>
             <tr>
               <th className="w-[56px]"></th>
