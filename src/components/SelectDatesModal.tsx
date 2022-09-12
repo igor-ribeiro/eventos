@@ -76,14 +76,11 @@ export const SelectDatesModal = ({
 
       <label
         htmlFor="select-dates-modal"
-        className="modal modal-bottom md:modal-middle cursor-pointer"
+        className="modal cursor-pointer"
         key={"opened-" + opened}
       >
-        <form
-          className="modal-box border border-base-300 md:max-w-xl"
-          onSubmit={confirm}
-        >
-          <div className="grid md:grid-cols-2 gap-4">
+        <form className="modal-box" onSubmit={confirm}>
+          <div className="modal-content grid md:grid-cols-2 gap-4">
             <Input
               autoFocus
               label="Data do evento"
@@ -100,7 +97,6 @@ export const SelectDatesModal = ({
               onChange={(e) => setConfirmationDeadline(e.target.value)}
             />
           </div>
-
           <div className="modal-action">
             <button
               className="btn btn-ghost"

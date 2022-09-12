@@ -54,90 +54,95 @@ export const SelectFieldModal = ({
   }
 
   return (
-    <div className="modal modal-bottom sm:modal-middle" data-open={opened}>
-      <div className="modal-box border border-base-300 md:max-w-4xl">
-        <h3 className="font-bold text-lg">Informações dos Convidados</h3>
+    <div className="modal" data-open={opened}>
+      <div className="modal-box md:max-w-4xl">
+        <div className="modal-content">
+          <h2 className="text-center">Informações dos Convidados</h2>
 
-        <div className="overflow-x-auto">
-          <table className="table w-full border border-base-300 table-compact">
-            <thead>
-              <tr>
-                <th className="w-[10ch]">Escolher</th>
-                <th>Nome</th>
-                <th className="w-[10ch]">Tipo</th>
-                <th>Descrição</th>
-              </tr>
-            </thead>
-            <tbody>
-              {fields.data?.map((field, i) => {
-                const Container = field.options.length > 0 ? "details" : "div";
+          <div className="overflow-x-auto">
+            <table className="table w-full border border-base-300 table-compact">
+              <thead>
+                <tr>
+                  <th className="w-[10ch]">Escolher</th>
+                  <th>Nome</th>
+                  <th className="w-[10ch] text-center">Tipo</th>
+                  <th>Descrição</th>
+                </tr>
+              </thead>
+              <tbody>
+                {fields.data?.map((field, i) => {
+                  const Container =
+                    field.options.length > 0 ? "details" : "div";
 
-                const isSelected = selectedIds.includes(field.id);
+                  const Name = field.options.length > 0 ? "summary" : "div";
 
-                const isDisabled =
-                  selectedCategories[field.category] && !isSelected;
+                  const isSelected = selectedIds.includes(field.id);
 
-                return (
-                  <tr
-                    key={field.id}
-                    className="align-top"
-                    data-cat={field.category}
-                  >
-                    <th className="text-center">
-                      <input
-                        type="checkbox"
-                        className="toggle"
-                        disabled={isDisabled}
-                        checked={isSelected}
-                        title={
-                          isDisabled
-                            ? `Você já selecionou um campo de ${getCategoryText(
-                                field.category
-                              )}`
-                            : ""
-                        }
-                        onChange={(e) => {
-                          const isSelected = e.target.checked;
+                  const isDisabled =
+                    selectedCategories[field.category] && !isSelected;
 
-                          setSelectedIds((selected) => {
-                            if (isSelected) {
-                              return selected.concat(field.id);
-                            }
+                  return (
+                    <tr
+                      key={field.id}
+                      className="align-top"
+                      data-cat={field.category}
+                    >
+                      <th className="text-center">
+                        <input
+                          type="checkbox"
+                          className="toggle"
+                          disabled={isDisabled}
+                          checked={isSelected}
+                          title={
+                            isDisabled
+                              ? `Você já selecionou um campo de ${getCategoryText(
+                                  field.category
+                                )}`
+                              : ""
+                          }
+                          onChange={(e) => {
+                            const isSelected = e.target.checked;
 
-                            return selected.filter((id) => id !== field.id);
-                          });
-                          setSelectedCategories((categories) => {
-                            return {
-                              ...categories,
-                              [field.category]: isSelected,
-                            };
-                          });
-                        }}
-                      />
-                    </th>
-                    <td>
-                      <Container>
-                        <summary className="font-bold">{field.name}</summary>
-                        {field.options?.map((option) => (
-                          <ul key={option.id} className="active text-xs">
-                            <li>
-                              {option.name} - {option.description}
-                            </li>
-                          </ul>
-                        ))}
-                      </Container>
-                    </td>
-                    <td>
-                      <span className="badge badge-secondary badge-sm font-bold uppercase">
-                        {getTypeText(field.type)}
-                      </span>
-                    </td>
-                    <td>{field.description}</td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+                            setSelectedIds((selected) => {
+                              if (isSelected) {
+                                return selected.concat(field.id);
+                              }
+
+                              return selected.filter((id) => id !== field.id);
+                            });
+                            setSelectedCategories((categories) => {
+                              return {
+                                ...categories,
+                                [field.category]: isSelected,
+                              };
+                            });
+                          }}
+                        />
+                      </th>
+                      <td>
+                        <Container>
+                          <Name className="font-bold">{field.name}</Name>
+                          {field.options?.map((option) => (
+                            <ul key={option.id} className="active text-xs">
+                              <li>
+                                {option.name} - {option.description}
+                              </li>
+                            </ul>
+                          ))}
+                        </Container>
+                      </td>
+                      <td className="text-center">
+                        <span className="badge badge-secondary badge-sm font-bold uppercase">
+                          {getTypeText(field.type)}
+                        </span>
+                      </td>
+                      <td>{field.description}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         </div>
 
         <div className="modal-action">

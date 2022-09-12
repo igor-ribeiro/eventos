@@ -56,28 +56,27 @@ export const SelectLinkModal = ({
 
       <label
         htmlFor="select-link-modal"
-        className="modal modal-bottom md:modal-middle cursor-pointer"
+        className="modal cursor-pointer"
         key={`opened-${opened.toString()}`}
       >
-        <form
-          className="modal-box border border-base-300 md:max-w-xl"
-          onSubmit={confirm}
-        >
-          <Input
-            autoFocus
-            label="Link do evento"
-            value={link}
-            onChange={(e) => {
-              e.preventDefault();
+        <form className="modal-box" onSubmit={confirm}>
+          <div className="modal-content">
+            <Input
+              autoFocus
+              label="Link do evento"
+              value={link}
+              onChange={(e) => {
+                e.preventDefault();
 
-              const link = slugify(e.target.value, {
-                lower: true,
-                trim: false,
-              });
+                const link = slugify(e.target.value, {
+                  lower: true,
+                  trim: false,
+                });
 
-              setLink(link);
-            }}
-          />
+                setLink(link);
+              }}
+            />
+          </div>
 
           <div className="modal-action">
             <button
