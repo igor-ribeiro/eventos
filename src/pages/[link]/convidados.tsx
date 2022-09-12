@@ -1,4 +1,4 @@
-import { downloadFile } from "@/utils/export";
+import { downloadFile, generateCsv } from "@/utils/export";
 import { trpc } from "@/utils/trpc";
 import { GetServerSideProps, NextPage } from "next";
 import Head from "next/head";
@@ -8,7 +8,6 @@ import { ClearIcon, DownloadIcon } from "@/components/Icons";
 import { ProtectedPage } from "@common/components/ProtectedPage";
 import { ssp } from "@common/server/ssp";
 import { DeleteIcon } from "@common/components/Icons";
-import { TRPC_ERROR_CODE_KEY } from "@trpc/server/rpc";
 
 type Filter = {
   name: string;
@@ -57,8 +56,6 @@ const ListPage: NextPage = () => {
 
   const router = useRouter();
 
-  // trpc.useQuery(["event.user.getAllByUser"]);
-
   const event = trpc.useQuery([
     "event.getListByLink",
     {
@@ -74,31 +71,7 @@ const ListPage: NextPage = () => {
     return null;
   }
 
-  // @ts-ignore
-  const guests = event.data.guests.filter((guest) => {
-    const hasName = true;
-    const hasAge = true;
-    const hasConfirmation = true;
-    // const hasName = new RegExp(removeAccents(filter.name), "i").test(
-    //   removeAccents(guest.name)
-    // );
-    // const hasAge = guest.age === filter.age;
-    // const hasConfirmation = guest.confirmation === filter.confirmation;
-
-    if (filter.name && !hasName) {
-      return false;
-    }
-
-    if (filter.age && !hasAge) {
-      return false;
-    }
-
-    if (filter.confirmation && !hasConfirmation) {
-      return false;
-    }
-
-    return true;
-  });
+  const guests = event.data.guests;
 
   function onChange(e: ChangeEvent<HTMLFormElement>) {
     update({
@@ -118,22 +91,34 @@ const ListPage: NextPage = () => {
   }
 
   function onExportGuestList() {
-    return;
-    // downloadFile(
-    //   generateCsv(
-    //     [
-    //       { name: "name", label: "Nome" },
-    //       { name: "age", label: "Idade", format: renderAge },
-    //       {
-    //         name: "confirmation",
-    //         label: "Confirmação",
-    //         format: renderConfirmation,
-    //       },
-    //     ],
-    //     guests
-    //   ),
-    //   `convidados-${router.query.slug}.csv`
-    // );
+    if (event.data == null) {
+      return;
+    }
+
+    const header = event.data.fields.map(({ field }) => {
+      return {
+        name: field.name,
+        label: field.name,
+      };
+    });
+
+    const data = guests.map((guest) => {
+      const values = guest.fields.reduce((values, { field, value }) => {
+        values[field.name] = value;
+
+        return values;
+      }, {} as Record<string, string>);
+
+      return {
+        id: guest.id,
+        ...values,
+      };
+    });
+
+    downloadFile(
+      generateCsv(header, data),
+      `convidados-${event.data.link}.csv`
+    );
   }
 
   function onClearFilter() {
@@ -152,15 +137,16 @@ const ListPage: NextPage = () => {
         <h1 className="mb-0 uppercase">{event.data.name}</h1>
       </div>
 
-      <div className="border border-base-300 rounded-md overflow-x-auto mt-6">
+      <div className="divider"></div>
+
+      <h3>Convidados</h3>
+      <div className="overflow-x-auto">
         <form className="mx-auto" onChange={onChange} action="" ref={formRef}>
           <input type="hidden" name="event_id" value={event.data.id} />
-          <table className="table w-full table-compact m-0">
+          <table className="table w-full">
             <thead>
               <tr>
                 <th className="w-[64px]">
-                  <br />
-                  {/** @ts-ignore */}
                   {guests.length !== event.data.guests.length && (
                     <button
                       className="btn btn-sm btn-ghost"
@@ -171,56 +157,17 @@ const ListPage: NextPage = () => {
                     </button>
                   )}
                 </th>
-                {guests[0]?.fields.map(({ id, field }) => {
-                  return <th key={id}>{field.name}</th>;
-                })}
-                {/*
-                <th>
-                  <div className="form-control">
-                    <label htmlFor="name">Nome</label>
-                    <input
-                      name="name"
-                      type="text"
-                      className="input input-bordered input-sm w-full"
-                      autoFocus
-                    />
-                  </div>
-                </th>
-                <th>
-                  <div className="form-control">
-                    <label htmlFor="age">Idade</label>
-                    <select
-                      name="age"
-                      className="select select-bordered w-full select-sm"
-                    >
-                      <option value="">Todos</option>
-                      <option>Adulto</option>
-                      <option>De 5 a 12 anos</option>
-                      <option>Menor que 5 anos</option>
-                    </select>
-                  </div>
-                </th>
-                <th>
-                  <div className="form-control">
-                    <label htmlFor="confirmation">Confirmado</label>
-                    <select
-                      name="confirmation"
-                      className="select select-bordered w-full select-sm"
-                    >
-                      <option value="">Todos</option>
-                      <option value={GuestConfirmation.YES}>Sim</option>
-                      <option value={GuestConfirmation.MAYBE}>Talvez</option>
-                      <option value={GuestConfirmation.NO}>Não</option>
-                    </select>
-                  </div>
-                </th>
-                */}
+
+                {event.data.fields.map(({ id, field }) => (
+                  <th key={id}>{field.name}</th>
+                ))}
+
                 <th className="align-top w-[30px]">
-                  <br />
                   <button
-                    className="btn btn-primary btn-sm"
+                    className="btn btn-circle btn-sm"
                     type="button"
                     onClick={onExportGuestList}
+                    disabled={guests.length === 0}
                   >
                     <DownloadIcon />
                   </button>
@@ -228,13 +175,14 @@ const ListPage: NextPage = () => {
               </tr>
             </thead>
             <tbody>
-              {/** @ts-ignore */}
               {guests.map((guest, i) => (
-                <tr key={guest.id} className={i % 2 === 0 ? "" : "active"}>
+                <tr key={guest.id}>
                   <th>{i + 1}</th>
-                  {guest.fields.map(({ id, field, value }) => {
-                    return <td key={id}>{value}</td>;
-                  })}
+
+                  {guest.fields.map(({ id, value }) => (
+                    <td key={id}>{value}</td>
+                  ))}
+
                   <td className="text-center">
                     <button
                       type="button"

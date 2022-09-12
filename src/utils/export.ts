@@ -4,7 +4,7 @@ const LINE_SEPARATOR = "\n";
 export function generateCsv<T>(
   headers: {
     label: string;
-    name: keyof T;
+    name: string;
     format?: (value: any) => string;
   }[],
   entries: T[]
@@ -17,7 +17,7 @@ export function generateCsv<T>(
 
   for (const entry of entries) {
     for (const header of headers) {
-      const value = entry[header.name] as any as string;
+      const value = entry[header.name as keyof T] as any as string;
       line.push(header.format ? header.format(value) : value);
     }
 
