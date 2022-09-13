@@ -4,6 +4,14 @@ import { addToast } from "@common/components/Toast";
 import { useEvent } from "@ribeirolabs/events/react";
 import { FormEvent, useCallback, useMemo, useState } from "react";
 import { useEventFormActions, useEventFormValue } from "./EventFormProvider";
+import {
+  closeModal,
+  Modal,
+  ModalCancelButton,
+  useModalEvent,
+} from "@common/components/Modal";
+
+const MODAL_ID = "select-link-modal";
 
 export const SelectLinkModal = ({
   onConfirm,
@@ -12,21 +20,11 @@ export const SelectLinkModal = ({
 }) => {
   const [link, setLink] = useState("");
 
-  const [opened, setOpened] = useState(false);
-
-  useEvent(
-    "modal",
-    useCallback((e) => {
-      if (e.detail.id !== "select-link-modal") {
-        return;
-      }
-
-      const isOpen = e.detail.action === "open";
-
-      setOpened(isOpen);
-
-      if (isOpen) {
-        setLink((e.detail.data as { link: string }).link);
+  useModalEvent(
+    MODAL_ID,
+    useCallback((detail) => {
+      if (detail.action === "open") {
+        setLink(detail.data?.link ?? "");
       }
     }, [])
   );
@@ -40,58 +38,37 @@ export const SelectLinkModal = ({
     }
 
     onConfirm(link);
-
-    setOpened(false);
+    closeModal(MODAL_ID);
   }
 
   return (
-    <>
-      <input
-        type="checkbox"
-        id="select-link-modal"
-        className="modal-toggle"
-        checked={opened}
-        onChange={(e) => setOpened(e.target.checked)}
-      />
+    <Modal id={MODAL_ID}>
+      <form onSubmit={confirm}>
+        <div className="modal-content">
+          <Input
+            autoFocus
+            label="Link do evento"
+            value={link}
+            onChange={(e) => {
+              e.preventDefault();
 
-      <label
-        htmlFor="select-link-modal"
-        className="modal cursor-pointer"
-        key={`opened-${opened.toString()}`}
-      >
-        <form className="modal-box" onSubmit={confirm}>
-          <div className="modal-content">
-            <Input
-              autoFocus
-              label="Link do evento"
-              value={link}
-              onChange={(e) => {
-                e.preventDefault();
+              const link = slugify(e.target.value, {
+                lower: true,
+                trim: false,
+              });
 
-                const link = slugify(e.target.value, {
-                  lower: true,
-                  trim: false,
-                });
+              setLink(link);
+            }}
+          />
+        </div>
 
-                setLink(link);
-              }}
-            />
-          </div>
-
-          <div className="modal-action">
-            <button
-              className="btn btn-ghost"
-              onClick={() => setOpened(false)}
-              type="button"
-            >
-              Cancelar
-            </button>
-            <button className="btn" type="submit">
-              Confirmar
-            </button>
-          </div>
-        </form>
-      </label>
-    </>
+        <div className="modal-action">
+          <ModalCancelButton modalId={MODAL_ID} />
+          <button className="btn" type="submit">
+            Confirmar
+          </button>
+        </div>
+      </form>
+    </Modal>
   );
 };

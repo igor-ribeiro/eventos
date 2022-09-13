@@ -1,7 +1,14 @@
 import { Input } from "@common/components/Input";
+import {
+  closeModal,
+  Modal,
+  ModalCancelButton,
+  useModalEvent,
+} from "@common/components/Modal";
 import { addToast } from "@common/components/Toast";
-import { useEvent } from "@ribeirolabs/events/react";
 import { FormEvent, useCallback, useMemo, useState } from "react";
+
+const MODAL_ID = "select-dates-modal";
 
 export const SelectDatesModal = ({
   onConfirm,
@@ -11,24 +18,11 @@ export const SelectDatesModal = ({
   const [date, setDate] = useState("");
   const [confirmationDeadline, setConfirmationDeadline] = useState("");
 
-  const [opened, setOpened] = useState(false);
-
-  useEvent(
-    "modal",
-    useCallback((e) => {
-      if (e.detail.id !== "select-dates-modal") {
-        return;
-      }
-
-      const isOpen = e.detail.action === "open";
-
-      setOpened(isOpen);
-
-      if (isOpen) {
-        const { date, confirmationDeadline } = e.detail.data as {
-          date?: string;
-          confirmationDeadline?: string;
-        };
+  useModalEvent(
+    MODAL_ID,
+    useCallback((detail) => {
+      if (detail.action === "open") {
+        const { date, confirmationDeadline } = detail.data ?? {};
 
         setDate(date || "");
 
@@ -46,8 +40,7 @@ export const SelectDatesModal = ({
     }
 
     onConfirm({ date, confirmationDeadline });
-
-    setOpened(false);
+    closeModal(MODAL_ID);
   }
 
   const maxConfirmationDeadline = useMemo(() => {
@@ -65,52 +58,32 @@ export const SelectDatesModal = ({
   }, [date]);
 
   return (
-    <>
-      <input
-        type="checkbox"
-        id="select-dates-modal"
-        className="modal-toggle"
-        checked={opened}
-        onChange={(e) => setOpened(e.target.checked)}
-      />
-
-      <label
-        htmlFor="select-dates-modal"
-        className="modal cursor-pointer"
-        key={"opened-" + opened}
-      >
-        <form className="modal-box" onSubmit={confirm}>
-          <div className="modal-content grid md:grid-cols-2 gap-4">
-            <Input
-              autoFocus
-              label="Data do evento"
-              type="date"
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
-              required
-            />
-            <Input
-              label="Prazo para confirmação"
-              type="date"
-              value={confirmationDeadline}
-              max={maxConfirmationDeadline}
-              onChange={(e) => setConfirmationDeadline(e.target.value)}
-            />
-          </div>
-          <div className="modal-action">
-            <button
-              className="btn btn-ghost"
-              onClick={() => setOpened(false)}
-              type="button"
-            >
-              Cancelar
-            </button>
-            <button className="btn" type="submit">
-              Confirmar
-            </button>
-          </div>
-        </form>
-      </label>
-    </>
+    <Modal id={MODAL_ID}>
+      <form onSubmit={confirm}>
+        <div className="modal-content grid md:grid-cols-2 gap-4">
+          <Input
+            autoFocus
+            label="Data do evento"
+            type="date"
+            value={date}
+            onChange={(e) => setDate(e.target.value)}
+            required
+          />
+          <Input
+            label="Prazo para confirmação"
+            type="date"
+            value={confirmationDeadline}
+            max={maxConfirmationDeadline}
+            onChange={(e) => setConfirmationDeadline(e.target.value)}
+          />
+        </div>
+        <div className="modal-action">
+          <ModalCancelButton modalId={MODAL_ID} />
+          <button className="btn" type="submit">
+            Confirmar
+          </button>
+        </div>
+      </form>
+    </Modal>
   );
 };
