@@ -60,7 +60,7 @@ export const SelectDatesModal = ({
   return (
     <Modal id={MODAL_ID}>
       <form onSubmit={confirm}>
-        <div className="modal-content grid md:grid-cols-2 gap-4">
+        <div className="modal-content max-w-4xl grid md:grid-cols-2 gap-4">
           <Input
             autoFocus
             label="Data do evento"

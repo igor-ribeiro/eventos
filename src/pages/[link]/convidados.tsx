@@ -1,13 +1,26 @@
+import slugify from "slugify";
 import { downloadFile, generateCsv } from "@/utils/export";
-import { trpc } from "@/utils/trpc";
+import { inferQueryOutput, trpc } from "@/utils/trpc";
 import { GetServerSideProps, NextPage } from "next";
 import Head from "next/head";
 import { useRouter } from "next/router";
-import { ChangeEvent, useReducer, useRef } from "react";
+import {
+  ChangeEvent,
+  FormEvent,
+  useCallback,
+  useMemo,
+  useReducer,
+  useRef,
+  useState,
+} from "react";
 import { ClearIcon, DownloadIcon } from "@/components/Icons";
 import { ProtectedPage } from "@common/components/ProtectedPage";
 import { ssp } from "@common/server/ssp";
-import { DeleteIcon } from "@common/components/Icons";
+import { AddIcon, DeleteIcon } from "@common/components/Icons";
+import { addToast } from "@common/components/Toast";
+import { Field } from "@prisma/client";
+import { openModal } from "@common/components/Modal";
+import { GuestGroupingModal } from "@/components/GuestGroupingModal";
 
 type Filter = {
   name: string;
@@ -82,12 +95,11 @@ const ListPage: NextPage = () => {
   function onRemoveGuest(id: string) {
     removeGuest
       .mutateAsync({ id })
-      .then(() => alert("Convidado removido"))
+      .then(() => {
+        alert("Convidado removido");
+        event.refetch();
+      })
       .catch(() => alert("Erro ao remover convidado. Tente novamente"));
-  }
-
-  function onExportEvent() {
-    downloadFile(JSON.stringify(event.data), `event-${router.query.slug}.json`);
   }
 
   function onExportGuestList() {
@@ -139,11 +151,16 @@ const ListPage: NextPage = () => {
 
       <div className="divider"></div>
 
+      <Grouping event={event.data} />
+
+      <div className="divider"></div>
+
       <h3>Convidados</h3>
+
       <div className="overflow-x-auto">
         <form className="mx-auto" onChange={onChange} action="" ref={formRef}>
           <input type="hidden" name="event_id" value={event.data.id} />
-          <table className="table w-full">
+          <table className="table">
             <thead>
               <tr>
                 <th className="w-[64px]">
@@ -202,5 +219,102 @@ const ListPage: NextPage = () => {
     </div>
   );
 };
+
+function Grouping({
+  event,
+}: {
+  event: inferQueryOutput<"event.getListByLink">;
+}) {
+  const [grouping, setGrouping] = useState<{
+    field: string;
+    values: [string, number][];
+  } | null>(null);
+
+  const sum = useMemo(
+    () => grouping?.values.reduce((sum, values) => sum + values[1], 0) ?? 0,
+    [grouping]
+  );
+
+  const onConfirm = useCallback((grouping: any) => {
+    setGrouping(grouping);
+  }, []);
+
+  function onExport() {
+    if (grouping == null) {
+      return;
+    }
+
+    const header = [grouping.field, "Soma"].map((label) => ({
+      label,
+      name: label,
+    }));
+
+    const data = grouping.values
+      .map(([value, sum]) => ({
+        [grouping.field]: value,
+        Soma: sum,
+      }))
+      .concat({
+        [grouping.field]: "Total",
+        Soma: sum,
+      });
+
+    downloadFile(
+      generateCsv(header, data),
+      `${event.link}_convidados-agrupados_${slugify(grouping.field)}.csv`
+    );
+  }
+
+  return (
+    <>
+      <div className="flex gap-2">
+        <h3>Agrupamento</h3>
+        <button
+          className="btn btn-sm flex gap-2"
+          onClick={() => openModal("guest-grouping-modal")}
+        >
+          <AddIcon />
+          Novo
+        </button>
+      </div>
+
+      {grouping ? (
+        <table className="table mt-4 max-w-sm">
+          <thead>
+            <tr>
+              <th>{grouping.field}</th>
+              <th className="text-end">Soma</th>
+              <th className="w-[30px]">
+                <button
+                  className="btn btn-circle btn-sm"
+                  type="button"
+                  onClick={onExport}
+                >
+                  <DownloadIcon />
+                </button>
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {grouping.values.map(([name, count]) => (
+              <tr key={name}>
+                <td>{name}</td>
+                <td className="text-end">{count}</td>
+                <td></td>
+              </tr>
+            ))}
+            <tr className="font-bold">
+              <td className="bg-neutral">Total</td>
+              <td className="bg-neutral text-end">{sum}</td>
+              <td className="bg-neutral"></td>
+            </tr>
+          </tbody>
+        </table>
+      ) : null}
+
+      <GuestGroupingModal event={event} onConfirm={onConfirm} />
+    </>
+  );
+}
 
 export default GuestListPage;

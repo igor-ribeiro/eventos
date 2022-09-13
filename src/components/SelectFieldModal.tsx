@@ -44,7 +44,7 @@ export const SelectFieldModal = ({
 
   return (
     <Modal id={MODAL_ID}>
-      <div className="modal-content">
+      <div className="modal-content max-w-4xl">
         <h2 className="text-center">Informações dos Convidados</h2>
 
         <div className="overflow-x-auto">
