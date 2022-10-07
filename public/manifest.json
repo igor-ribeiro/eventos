@@ -17,6 +17,8 @@
   "shortcuts": [
     {
       "name": "Criar evento",
+      "short_name": "Criar",
+      "description": "Criar um novo evento",
       "url": "/criar?source=pwa",
       "icons": [{ "src": "/plus-icon.svg", "sizes": "96x96" }]
     }
