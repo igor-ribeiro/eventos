@@ -20,7 +20,7 @@
       "short_name": "Criar",
       "description": "Criar um novo evento",
       "url": "/criar?source=pwa",
-      "icons": [{ "src": "/plus-icon.svg", "sizes": "96x96" }]
+      "icons": [{ "src": "/plus-icon.png", "sizes": "96x96" }]
     }
   ],
   "icons": [
